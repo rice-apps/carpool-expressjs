@@ -22,9 +22,9 @@ var RideSchema = new mongoose.Schema({
 });
 
 /**
- * The owner and riders fields only contain IDs that reference the objects, not the actual obhect. Before we send our
- * Ride object, we need to 'populate' these fields with their actual objects.
- * This is called 'middleware.'
+ * The owner and riders fields only contain IDs that reference the User objects, not the actual object. Before we send
+ * our Ride object, we need to 'populate' these fields with their actual User objects.
+ * This is a type of 'middleware.'
  *
  * @param next is a function passed in by mongoose that we need to call after we do our population.
  */
