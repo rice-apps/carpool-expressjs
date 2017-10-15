@@ -7,14 +7,16 @@ var RideSchema = new mongoose.Schema({
     title: String,
     description: String,
     cost: Number,
+    spots: Number,
+    vehicle_type: String,
     departure_time: Date,
     arrival_time: Date,
     departure_address: String,
     arrival_address: String,
-    departure_location: { type: 'Point', coordinates: [Number]}, // [long, lat]
-    arrival_location: { type: 'Point', coordinates: [Number]}, // [long, lat]
-    spots: Number,
-    vehicle_type: String,
+
+    /* Example: { departure_location: { "type": "Point", "coordinates": [0.0, 0.0] } */
+    departure_location: { type: String, coordinates: [Number]}, // [longitude, latitude]
+    arrival_location: { type: String, coordinates: [Number]}, // [longitude, latitude]
 
     /* for owner and rider, we need to tell MongoDB to reference the User model here. */
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -44,6 +46,4 @@ RideSchema.pre('save', autoPopulate);
 /**
  * Declare the model.
  */
-mongoose.model('Ride', RideSchema);
-
-module.exports = mongoose.model('Ride');
+module.exports = mongoose.model('Ride', RideSchema);
