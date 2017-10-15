@@ -8,7 +8,9 @@ var rideController = require('./controllers/ride-controller');
 var app = express();
 
 /* Set up request logging */
-app.use(morgan('combined'));
+if(process.env.NODE_ENV !== 'test') {
+    app.use(morgan('combined'));
+}
 
 /* Declare our routes */
 app.use('/rides', rideController);

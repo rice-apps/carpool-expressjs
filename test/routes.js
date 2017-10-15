@@ -1,3 +1,5 @@
+process.env.NODE_ENV = 'test';
+
 var request = require('supertest');
 var assert = require('chai').assert;
 
