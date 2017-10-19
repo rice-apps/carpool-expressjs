@@ -1,4 +1,5 @@
 # carpool-expressjs
+[![Travis-CI](https://travis-ci.org/rice-apps/carpool-expressjs.svg?branch=master)](https://travis-ci.org/rice-apps/carpool-expressjs)
 
 ## Installation
 
