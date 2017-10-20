@@ -1,18 +1,28 @@
 process.env.NODE_ENV = 'test';
 
 var request = require('supertest');
-var assert = require('chai').assert;
+var should = require('chai').should();
 
 describe("Route tests", () => {
     server = require('../src/server');
     describe("/rides route", () => {
-        it("Should return status 200 on GET", (done) => {
-            request(server)
-            .get('/rides')
-            .end((req, res) => {
-                assert.equal(res.status, 200);
-                done();
+        describe("Initial GET", () => {
+            it("Should have status 200", (done) => {
+                request(server)
+                .get('/rides')
+                .end((req, res) => {
+                    res.status.should.equal(200);
+                    done();
+                });
+            });
+            it("Should have no rides stored", (done) => {
+                request(server)
+                .get('/rides')
+                .end((req, res) => {
+                    res.body.should.have.lengthOf(0);
+                    done();
+                });
             });
         });
-    }); 
+    });
 });
