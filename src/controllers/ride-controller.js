@@ -9,7 +9,10 @@ var authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
-router.use(authMiddleWare);
+if(process.env.NODE_ENV !== 'test') {
+    router.use(authMiddleWare);
+    console.log(process.env.NODE_ENV);
+}
 
 /**
  * Returns all rides.

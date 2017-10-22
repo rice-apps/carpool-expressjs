@@ -9,7 +9,7 @@ describe("Route tests", () => {
         describe("Initial GET", () => {
             it("Should have status 200", (done) => {
                 request(server)
-                .get('/rides')
+                .get('/api/rides')
                 .end((req, res) => {
                     res.status.should.equal(200);
                     done();
@@ -17,7 +17,7 @@ describe("Route tests", () => {
             });
             it("Should have no rides stored", (done) => {
                 request(server)
-                .get('/rides')
+                .get('/api/rides')
                 .end((req, res) => {
                     res.body.should.have.lengthOf(0);
                     done();
