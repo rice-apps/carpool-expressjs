@@ -3,6 +3,7 @@ var morgan = require('morgan');
 
 var db = require('./db');
 var rideController = require('./controllers/ride-controller');
+var authController = require('./controllers/auth-controller');
 
 /* Get an Express app instance */
 var app = express();
@@ -13,6 +14,7 @@ if(process.env.NODE_ENV !== 'test') {
 }
 
 /* Declare our routes */
-app.use('/rides', rideController);
+app.use('/api/rides', rideController);
+app.use('/api/auth', authController);
 
 module.exports = app;

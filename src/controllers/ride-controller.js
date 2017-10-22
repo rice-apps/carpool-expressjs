@@ -4,8 +4,12 @@ var router = express.Router();
 var bodyParser = require('body-parser');
 
 var Ride = require('../models/ride');
+var User = require('../models/user');
+var authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
+
+router.use(authMiddleWare);
 
 /**
  * Returns all rides.
@@ -28,4 +32,20 @@ router.get('/', function (request, response) {
 });
 
 module.exports = router;
+
+router.post('/', function (req, res) {
+    User.findOne({ username: req.user }, function (err, user) {
+        if (err) return res.status(500);
+        Ride.create({
+            title: req.body.title,
+            description: req.body.description,
+            owner: user
+        }, function (err, ride) {
+            if (err) return res.status(500);
+            res.status(200).send(ride);
+        });
+    });
+
+});
+
 
