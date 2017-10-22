@@ -12,7 +12,7 @@ var app = express();
 app.use(morgan('combined'));
 
 /* Declare our routes */
-app.use('/rides', rideController);
-app.use('/auth', authController);
+app.use('/api/rides', rideController);
+app.use('/api/auth', authController);
 
 module.exports = app;
