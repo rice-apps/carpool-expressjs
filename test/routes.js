@@ -6,7 +6,7 @@ describe("Route tests", () => {
     describe("/rides route", () => {
         it("Should return status 200 on GET", (done) => {
             request(server)
-            .get('/rides')
+            .get('/api/rides')
             .end((req, res) => {
                 assert.equal(res.status, 200);
                 done();
