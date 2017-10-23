@@ -9,6 +9,7 @@ var authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
+/* Use our auth checker to stash identity data in the request before we process it */
 router.use(authMiddleWare);
 
 /**
@@ -31,21 +32,23 @@ router.get('/', function (request, response) {
    })
 });
 
-module.exports = router;
-
+/**
+ * Post a single ride.
+ */
 router.post('/', function (req, res) {
-    User.findOne({ username: req.user }, function (err, user) {
+    // grab the username out of the request and find that user in the database
+    User.findOne({ username: req.userData.user }, function (err, thisUser) {
         if (err) return res.status(500);
+        if (!user) return res.status(401);
         Ride.create({
             title: req.body.title,
             description: req.body.description,
-            owner: user
+            owner: thisUser
         }, function (err, ride) {
             if (err) return res.status(500);
             res.status(200).send(ride);
         });
     });
-
 });
 
-
+module.exports = router;

@@ -11,7 +11,7 @@ var authMiddleWare = function(req, res, next) {
             if (err) {
                 return res.status(401).json({ success: false, message: 'Failed to authenticate token' });
             } else {
-                req.user = decoded.data;
+                req.userData = decoded.data;
                 next();
             }
         });
