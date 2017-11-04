@@ -11,16 +11,21 @@ var RideSchema = new mongoose.Schema({
     vehicle_type: String,
     departure_time: Date,
     arrival_time: Date,
-    departure_address: String,
-    arrival_address: String,
-
-    /* Example: { departure_location: { "type": "Point", "coordinates": [0.0, 0.0] } */
-    departure_location: { type: String, coordinates: [Number]}, // [longitude, latitude]
-    arrival_location: { type: String, coordinates: [Number]}, // [longitude, latitude]
+    departing_from: String,
+    arriving_at: String,
+    meeting_location: String,
 
     /* for owner and rider, we need to tell MongoDB to reference the User model here. */
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    riders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+    riders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
+    /* Below are currently unused */
+
+    departure_address: String,
+    arrival_address: String,
+    /* Example: { departure_location: { "type": "Point", "coordinates": [0.0, 0.0] } */
+    departure_location: { type: String, coordinates: [Number]}, // [longitude, latitude]
+    arrival_location: { type: String, coordinates: [Number]} // [longitude, latitude]
 });
 
 /**
