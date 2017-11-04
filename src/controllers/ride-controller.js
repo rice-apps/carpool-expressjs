@@ -34,6 +34,14 @@ router.get('/', function (request, response) {
    })
 });
 
+router.get('/:ride_id', function (req, res) {
+   Ride.findById(req.params.ride_id, function (err, ride) {
+       if (err) res.status(500);
+       if (!ride) res.status(404);
+       res.status(200).send(ride);
+   })
+});
+
 /**
  * Post a single ride.
  */

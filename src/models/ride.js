@@ -4,11 +4,8 @@ var mongoose = require('mongoose');
  * Declare our schema for a Ride.
  */
 var RideSchema = new mongoose.Schema({
-    title: String,
     description: String,
-    cost: Number,
     spots: Number,
-    vehicle_type: String,
     departure_time: Date,
     arrival_time: Date,
     departing_from: String,
@@ -19,8 +16,12 @@ var RideSchema = new mongoose.Schema({
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     riders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 
-    /* Below are currently unused */
 
+
+    /* Below are currently unused */
+    title: String,
+    cost: Number,
+    vehicle_type: String,
     departure_address: String,
     arrival_address: String,
     /* Example: { departure_location: { "type": "Point", "coordinates": [0.0, 0.0] } */
