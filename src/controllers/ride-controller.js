@@ -61,4 +61,36 @@ router.post('/', function (req, res) {
     });
 });
 
+/**
+ * Post a user to a ride.
+ */
+router.post('/:ride_id/book', function (req, res) {
+   User.findOne({ username: req.userData.user }, function (err, user) {
+       if (err) res.status(500).send();
+       if (!user) res.status(404).send();
+       Ride.findById(req.params.ride_id, function (err, ride) {
+           if (err) res.status(500).send();
+
+           if (includes(ride.riders, user.username)) {
+               res.status(403).send("User exists on ride");
+           } else {
+               ride.riders.push(user);
+               ride.save(function (err, newRide) {
+                   if (err) res.status(500).send();
+                   res.status(200).send(newRide);
+               });
+           }
+       })
+   })
+});
+
+var includes = function (array, username) {
+    for (var i = 0; i < array.length; i++) {
+        if (array[i].username === username) return true;
+    }
+    return false;
+};
+
+
+
 module.exports = router;
