@@ -47,7 +47,9 @@ router.get('/', function (req, res) {
                         if (err) return res.status(500);
                         if (!user) {
                             User.create({
-                                username: authSucceded.user
+                                username: authSucceded.user,
+                                first_name: authSucceded.user,
+                                email: authSucceded.user + '@rice.edu'
                             }, function (err, newUser) {
                                 if (err) return res.status(500);
                             });
