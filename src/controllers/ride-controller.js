@@ -91,6 +91,32 @@ var includes = function (array, username) {
     return false;
 };
 
+/**
+ * delete a user from a ride
+ */
+router.post('/:ride_id/deletebook', function (req, res) {
+    User.findOne({ username: req.userData.user }, function (err, user) {
+        if (err) res.status(500).send();
+        if (!user) res.status(404).send();
+        Ride.findById(req.params.ride_id, function (err, ride) {
+            if (err) res.status(500).send();
+            if (includes(ride.riders, user.username)) {
 
+                for (i = 0; i <ride.riders.length; i++){
+                    if (ride.riders[i].username === user.username) {
+                        ride.riders.splice(i,1);
+                    }
+                }
+                ride.save(function (err, deleteRide) {
+                    if (err) res.status(500).send();
+                    res.status(200).send(deleteRide);
+                });
+
+            } else {
+                res.status(403).send("User doesn't exist");
+            }
+        })
+    })
+});
 
 module.exports = router;
