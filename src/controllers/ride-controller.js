@@ -51,9 +51,7 @@ router.post('/', function (req, res) {
         if (err) return res.status(500);
         if (!user) return res.status(401);
         Ride.create({
-            title: req.body.title,
-            description: req.body.description,
-            owner: thisUser
+            riders: [thisUser]
         }, function (err, ride) {
             if (err) return res.status(500);
             res.status(200).send(ride);
