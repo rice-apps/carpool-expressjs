@@ -6,6 +6,7 @@ var db = require('./db');
 var rideController = require('./controllers/ride-controller');
 var userController = require('./controllers/user-controller');
 var authController = require('./controllers/auth-controller');
+var searchController = require('./controllers/search-controller');
 
 /* Get an Express app instance */
 var app = express();
@@ -23,5 +24,6 @@ if(process.env.NODE_ENV !== 'test') {
 app.use('/api/rides', rideController);
 app.use('/api/users', userController);
 app.use('/api/auth', authController);
+app.use('/api/search', searchController);
 
 module.exports = app;
