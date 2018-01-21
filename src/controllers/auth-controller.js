@@ -14,9 +14,10 @@ const User = require('../models/user');
 router.use(bodyParser.json());
 
 /**
- * After the browser is redirected by the IDP, the frontend takes the ticket off the URL and sends a GET
- * request to the backend, here, with the ticket as a query parameter. Here, we validate the ticket against
- * the CAS server and then parse the response to see if we succeeded, and let the frontend know.
+ * After the browser is redirected by the IDP, the frontend takes the ticket off the URL and sends a
+ * GET request to the backend, here, with the ticket as a query parameter. Here, we validate the
+ * ticket against the CAS server and then parse the response to see if we succeeded, and let the
+ * frontend know.
  */
 router.get('/', (req, res) => {
   const { ticket } = req.query;
@@ -26,11 +27,15 @@ router.get('/', (req, res) => {
     const url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
     request(url, (err, response, body) => {
       if (err) return res.status(500);
-
-      // parse the XML.
-      // notice the second argument - it's an object of options for the parser, one to strip the namespace
-      // prefix off of tags and another to prevent the parser from creating 1-element arrays.
-      xmlParser(body, { tagNameProcessors: [stripPrefix], explicitArray: false }, (parseErr, result) => {
+      /**
+       * parse the XML. notice the second argument - it's an object of options for the parser,
+       * one to strip the namespace prefix off of tags and another to prevent the parser from
+       * creating 1-element arrays.
+       */
+      xmlParser(body, {
+        tagNameProcessors: [stripPrefix],
+        explicitArray: false,
+      }, (parseErr, result) => {
         if (parseErr) return res.status(500);
 
         const { serviceResponse } = result;
@@ -56,10 +61,11 @@ router.get('/', (req, res) => {
             }
             return user;
           });
-
-          // send our token to the frontend! now, whenever the user tries to access a resource, we check their
-          // token by verifying it and seeing if the payload (the username) allows this user to access
-          // the requested resource.
+          /**
+           * send our token to the frontend! now, whenever the user tries to access a resource,
+           * we check their token by verifying it and seeing if the payload (the username)
+           * allows this user to access the requested resource.
+           */
           return res.json({
             success: true,
             message: 'CAS authentication success',
