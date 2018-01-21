@@ -22,5 +22,10 @@
     "request": "^2.83.0",
     "supertest": "^3.0.0",
     "xml2js": "^0.4.19"
+  },
+  "devDependencies": {
+    "eslint": "^4.16.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0"
   }
 }

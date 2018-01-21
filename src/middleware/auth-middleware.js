@@ -1,26 +1,25 @@
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
-var config = require('../config');
+const config = require('../config');
 
-var authMiddleWare = function(req, res, next) {
+const authMiddleWare = (req, res, next) => {
+  const token = req.body.token || req.query.token || req.headers['x-access-token'];
 
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-    if (token) {
-        jwt.verify(token, config.secret, function(err, decoded) {
-            if (err) {
-                return res.status(401).json({ success: false, message: 'Failed to authenticate token' });
-            } else {
-                req.userData = decoded.data;
-                next();
-            }
-        });
-    } else {
-        return res.status(401).send({
-            success: false,
-            message: 'No token provided.'
-        });
-    }
+  if (token) {
+    jwt.verify(token, config.secret, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ success: false, message: 'Failed to authenticate token' });
+      }
+      req.userData = decoded.data;
+      next();
+      return decoded;
+    });
+    return token;
+  }
+  return res.status(401).send({
+    success: false,
+    message: 'No token provided.',
+  });
 };
 
 module.exports = authMiddleWare;

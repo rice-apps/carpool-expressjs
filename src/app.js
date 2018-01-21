@@ -1,22 +1,21 @@
-var express = require('express');
-var morgan = require('morgan');
-var cors = require('cors');
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
 
-var db = require('./db');
-var rideController = require('./controllers/ride-controller');
-var userController = require('./controllers/user-controller');
-var authController = require('./controllers/auth-controller');
-var searchController = require('./controllers/search-controller');
+const rideController = require('./controllers/ride-controller');
+const userController = require('./controllers/user-controller');
+const authController = require('./controllers/auth-controller');
+const searchController = require('./controllers/search-controller');
 
 /* Get an Express app instance */
-var app = express();
+const app = express();
 
 /* Set up CORS */
 app.use(cors());
 
 /* Set up request logging */
-if(process.env.NODE_ENV !== 'test') {
-    app.use(morgan('combined'));
+if (process.env.NODE_ENV !== 'test') {
+  app.use(morgan('combined'));
 }
 
 

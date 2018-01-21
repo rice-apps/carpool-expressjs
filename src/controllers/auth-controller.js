@@ -1,14 +1,15 @@
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
-var jwt = require('jsonwebtoken');
-var request = require('request');
-var xmlParser = require('xml2js').parseString;
-var stripPrefix = require('xml2js').processors.stripPrefix;
+const express = require('express');
 
-var config = require('../config');
+const router = express.Router();
+const bodyParser = require('body-parser');
+const jwt = require('jsonwebtoken');
+const request = require('request');
+const xmlParser = require('xml2js').parseString;
+const { stripPrefix } = require('xml2js').processors;
 
-var User = require('../models/user');
+const config = require('../config');
+
+const User = require('../models/user');
 
 router.use(bodyParser.json());
 
@@ -17,67 +18,67 @@ router.use(bodyParser.json());
  * request to the backend, here, with the ticket as a query parameter. Here, we validate the ticket against
  * the CAS server and then parse the response to see if we succeeded, and let the frontend know.
  */
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
+  const { ticket } = req.query;
 
-    var ticket = req.query.ticket;
+  if (ticket) {
+    // validate our ticket against the CAS server
+    const url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
+    request(url, (err, response, body) => {
+      if (err) return res.status(500);
 
-    if (ticket) {
-        // validate our ticket against the CAS server
-        var url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
-        request(url, function(err, response, body) {
+      // parse the XML.
+      // notice the second argument - it's an object of options for the parser, one to strip the namespace
+      // prefix off of tags and another to prevent the parser from creating 1-element arrays.
+      xmlParser(body, { tagNameProcessors: [stripPrefix], explicitArray: false }, (parseErr, result) => {
+        if (parseErr) return res.status(500);
 
-            if (err) return res.status(500);
+        const { serviceResponse } = result;
 
-            // parse the XML.
-            // notice the second argument - it's an object of options for the parser, one to strip the namespace
-            // prefix off of tags and another to prevent the parser from creating 1-element arrays.
-            xmlParser(body, { tagNameProcessors: [stripPrefix], explicitArray: false }, function (err, result) {
-                if (err) return res.status(500);
+        const authSucceded = serviceResponse.authenticationSuccess;
+        if (authSucceded) {
+          // here, we create a token with the user's info as its payload.
+          // authSucceded contains: { user: <username>, attributes: <attributes>}
+          const token = jwt.sign({ data: authSucceded }, config.secret);
 
-                serviceResponse = result.serviceResponse;
+          // see if this netID exists as a user already. if not, create one.
+          User.findOne({ username: authSucceded.user }, (findErr, user) => {
+            if (findErr) return res.status(500);
+            if (!user) {
+              User.create({
+                username: authSucceded.user,
+                first_name: authSucceded.user,
+                email: `${authSucceded.user}@rice.edu`,
+              }, (createErr, newUser) => {
+                if (createErr) return res.status(500);
+                return newUser;
+              });
+            }
+            return user;
+          });
 
-                var authSucceded = serviceResponse.authenticationSuccess
-                if (authSucceded) {
-                    // here, we create a token with the user's info as its payload.
-                    // authSucceded contains: { user: <username>, attributes: <attributes>}
-                    var token = jwt.sign({ data: authSucceded }, config.secret);
+          // send our token to the frontend! now, whenever the user tries to access a resource, we check their
+          // token by verifying it and seeing if the payload (the username) allows this user to access
+          // the requested resource.
+          return res.json({
+            success: true,
+            message: 'CAS authentication success',
+            user: {
+              username: authSucceded.user,
+              token,
+            },
+          });
+        } else if (serviceResponse.authenticationFailure) {
+          return res.status(401).json({ success: false, message: 'CAS authentication failed' });
+        }
 
-                    // see if this netID exists as a user already. if not, create one.
-                    User.findOne({ username: authSucceded.user }, function (err, user) {
-                        if (err) return res.status(500);
-                        if (!user) {
-                            User.create({
-                                username: authSucceded.user,
-                                first_name: authSucceded.user,
-                                email: authSucceded.user + '@rice.edu'
-                            }, function (err, newUser) {
-                                if (err) return res.status(500);
-                            });
-                        }
-                    });
-
-                    // send our token to the frontend! now, whenever the user tries to access a resource, we check their
-                    // token by verifying it and seeing if the payload (the username) allows this user to access
-                    // the requested resource.
-                    res.json({
-                        success: true,
-                        message: 'CAS authentication success',
-                        user: {
-                            username: authSucceded.user,
-                            token: token
-                        }
-                    });
-
-                } else if (serviceResponse.authenticationFailure) {
-                    res.status(401).json({ success: false, message: 'CAS authentication failed' });
-                } else {
-                    res.status(500);
-                }
-            })
-        })
-    } else {
-        return res.status(400);
-    }
+        return res.status(500);
+      });
+      return response;
+    });
+    return ticket;
+  }
+  return res.status(400);
 });
 
 module.exports = router;
