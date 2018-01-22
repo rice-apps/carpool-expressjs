@@ -1,7 +1,9 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const mongoose = require('mongoose');
 
+const config = require('./config');
 const rideController = require('./controllers/ride-controller');
 const userController = require('./controllers/user-controller');
 const authController = require('./controllers/auth-controller');
@@ -18,6 +20,8 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined'));
 }
 
+/* Conncet to the database */
+mongoose.connect(config.db_uri, { useMongoClient: true });
 
 /* Declare our routes */
 app.use('/api/rides', rideController);
