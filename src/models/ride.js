@@ -19,7 +19,7 @@ const RideSchema = new mongoose.Schema({
  *
  * @param next is a function passed in by mongoose that we need to call after we do our population.
  */
-const autoPopulate = (next) => {
+const autoPopulate = function (next) {
   this.populate('riders');
   next();
 };
