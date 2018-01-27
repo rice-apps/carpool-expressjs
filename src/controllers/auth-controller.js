@@ -19,65 +19,64 @@ router.use(bodyParser.json());
  */
 router.get('/', function (req, res) {
 
-    var ticket = req.query.ticket;
+  var ticket = req.query.ticket;
 
-    if (ticket) {
-        // validate our ticket against the CAS server
-        var url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
-        request(url, function(err, response, body) {
+  if (ticket) {
+    // validate our ticket against the CAS server
+    var url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
+    request(url, function (err, response, body) {
 
+      if (err) return res.status(500);
+
+      // parse the XML.
+      // notice the second argument - it's an object of options for the parser, one to strip the namespace
+      // prefix off of tags and another to prevent the parser from creating 1-element arrays.
+      xmlParser(body, {tagNameProcessors: [stripPrefix], explicitArray: false}, function (err, result) {
+        if (err) return res.status(500);
+
+        serviceResponse = result.serviceResponse;
+
+        var authSucceded = serviceResponse.authenticationSuccess;
+        if (authSucceded) {
+          // here, we create a token with the user's info as its payload.
+          // authSucceded contains: { user: <username>, attributes: <attributes>}
+          var token = jwt.sign({data: authSucceded}, config.secret);
+
+          // see if this netID exists as a user already. if not, create one.
+          User.findOne({username: authSucceded.user}, function (err, user) {
             if (err) return res.status(500);
-
-            // parse the XML.
-            // notice the second argument - it's an object of options for the parser, one to strip the namespace
-            // prefix off of tags and another to prevent the parser from creating 1-element arrays.
-            xmlParser(body, { tagNameProcessors: [stripPrefix], explicitArray: false }, function (err, result) {
+            if (!user) {
+              User.create({
+                username: authSucceded.user,
+                email: authSucceded.user + '@rice.edu'
+              }, function (err, newUser) {
                 if (err) return res.status(500);
+              });
+            }
+          });
 
-                serviceResponse = result.serviceResponse;
+          // send our token to the frontend! now, whenever the user tries to access a resource, we check their
+          // token by verifying it and seeing if the payload (the username) allows this user to access
+          // the requested resource.
+          res.json({
+            success: true,
+            message: 'CAS authentication success',
+            user: {
+              username: authSucceded.user,
+              token: token
+            }
+          });
 
-                var authSucceded = serviceResponse.authenticationSuccess
-                if (authSucceded) {
-                    // here, we create a token with the user's info as its payload.
-                    // authSucceded contains: { user: <username>, attributes: <attributes>}
-                    var token = jwt.sign({ data: authSucceded }, config.secret);
-
-                    // see if this netID exists as a user already. if not, create one.
-                    User.findOne({ username: authSucceded.user }, function (err, user) {
-                        if (err) return res.status(500);
-                        if (!user) {
-                            User.create({
-                                username: authSucceded.user,
-                                first_name: authSucceded.user,
-                                email: authSucceded.user + '@rice.edu'
-                            }, function (err, newUser) {
-                                if (err) return res.status(500);
-                            });
-                        }
-                    });
-
-                    // send our token to the frontend! now, whenever the user tries to access a resource, we check their
-                    // token by verifying it and seeing if the payload (the username) allows this user to access
-                    // the requested resource.
-                    res.json({
-                        success: true,
-                        message: 'CAS authentication success',
-                        user: {
-                            username: authSucceded.user,
-                            token: token
-                        }
-                    });
-
-                } else if (serviceResponse.authenticationFailure) {
-                    res.status(401).json({ success: false, message: 'CAS authentication failed' });
-                } else {
-                    res.status(500);
-                }
-            })
-        })
-    } else {
-        return res.status(400);
-    }
+        } else if (serviceResponse.authenticationFailure) {
+          res.status(401).json({success: false, message: 'CAS authentication failed'});
+        } else {
+          res.status(500);
+        }
+      })
+    })
+  } else {
+    return res.status(400);
+  }
 });
 
 module.exports = router;
