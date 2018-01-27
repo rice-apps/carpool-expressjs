@@ -1,3 +1,5 @@
+var _ = require('underscore');
+
 var express = require('express');
 var jwt = require('jsonwebtoken');
 var router = express.Router();
@@ -8,6 +10,8 @@ var User = require('../models/user');
 var authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
+router.use(authMiddleWare);
+
 
 if(process.env.NODE_ENV !== 'test') {
     router.use(authMiddleWare);
@@ -53,5 +57,32 @@ router.delete('/:username', (req, res) => {
         });
     });
 });
+
+router.put('/:username', (req, res) => {
+    User.findOne({username: req.params.username}, (err, user) => {
+
+        if (req.userData.username !== req.params.username) {
+            return res.status(401).send();
+        }
+
+        if (err) {
+            return res.status(500).send();
+        }
+
+        if (!user) {
+            return res.status(404).send();
+        }
+
+        user = _.extend(user, req.user);
+        user.save(function (err, usr) {
+            res.status(200).send(usr);
+        });
+
+    })
+
+
+
+
+})
 
 module.exports = router;
