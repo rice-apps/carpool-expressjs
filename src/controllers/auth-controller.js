@@ -43,14 +43,16 @@ router.get('/', function (req, res) {
           var token = jwt.sign({data: authSucceded}, config.secret);
 
           // see if this netID exists as a user already. if not, create one.
+          let newUser = false;
           User.findOne({username: authSucceded.user}, function (err, user) {
-            if (err) return res.status(500);
+            if (err) return res.status(500).send();
             if (!user) {
               User.create({
                 username: authSucceded.user,
-                email: authSucceded.user + '@rice.edu'
+                email: authSucceded.user + '@rice.edu',
               }, function (err, newUser) {
-                if (err) return res.status(500);
+                if (err) return res.status(500).send();
+                newUser = true;
               });
             }
           });
@@ -63,14 +65,15 @@ router.get('/', function (req, res) {
             message: 'CAS authentication success',
             user: {
               username: authSucceded.user,
-              token: token
+              token: token,
+              is_new: newUser
             }
           });
 
         } else if (serviceResponse.authenticationFailure) {
-          res.status(401).json({success: false, message: 'CAS authentication failed'});
+          return res.status(401).json({success: false, message: 'CAS authentication failed'});
         } else {
-          res.status(500);
+          return res.status(500).send();
         }
       })
     })
