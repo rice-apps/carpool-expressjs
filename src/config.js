@@ -1,4 +1,5 @@
-if (process.env.NODE_ENV === 'test') {
+process.env.NODE_ENV = 'test';
+if (process.env.NODE_ENV === 'testaaa') {
   module.exports = {
     secret: 'TEST_SECRET',
     db_uri: 'mongodb://localhost/Carpool',
