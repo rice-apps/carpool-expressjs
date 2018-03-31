@@ -1,8 +1,10 @@
-var app = require('./app');
-var port = process.env.PORT || 3000;
+const app = require('./app');
 
-var server = app.listen(port, function() {
-    console.log('Carpool backend listening on port ' + port);
+const port = process.env.PORT || 3000;
+
+const server = app.listen(port, () => {
+  // eslint-disable-next-line no-console
+  console.log(`Carpool backend listening on port ${port}`);
 });
 
 module.exports = server;

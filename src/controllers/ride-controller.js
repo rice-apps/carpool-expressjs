@@ -11,8 +11,15 @@ router.use(bodyParser.json());
 
 if (process.env.NODE_ENV !== 'test') {
   router.use(authMiddleWare);
-  console.log(process.env.NODE_ENV);
 }
+
+const includes = (array, username) => {
+  for (let i = 0; i < array.length; i += 1) {
+    if (array[i].username === username) return true;
+  }
+  return false;
+};
+
 
 /**
  * Returns all rides.
@@ -86,14 +93,6 @@ router.post('/:ride_id/book', function (req, res) {
     })
   })
 });
-
-
-var includes = function (array, username) {
-  for (var i = 0; i < array.length; i++) {
-    if (array[i].username === username) return true;
-  }
-  return false;
-};
 
 
 module.exports = router;
