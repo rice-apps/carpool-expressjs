@@ -58,31 +58,25 @@ router.delete('/:username', (req, res) => {
   });
 });
 
-router.put('/:username', (req, res) => {
+router.put('/:username/edit', (req, res) => {
     User.findOne({username: req.params.username}, (err, user) => {
-
-        if (req.userData.username !== req.params.username) {
+        if (req.userData.user !== req.params.username) {
             return res.status(401).send();
         }
 
-        if (err) {
-            return res.status(500).send();
-        }
+        if (err) return res.status(500).send();
+        if (!user) return res.status(404).send();
 
-        if (!user) {
-            return res.status(404).send();
+        // Extend the user (copies values from req.body onto user) and save it if req is sent by a valid user.
+        if (!(Object.keys(req.body).every(function(prop) {return User.schema.paths.hasOwnProperty(prop);}))) {
+            return res.status(400).send("Given object does not match db format");
         }
-
-        user = _.extend(user, req.user);
-        user.save(function (err, usr) {
-            res.status(200).send(usr);
+        user = _.extend(user, req.body);
+        user.save((err, user) => {
+            if(err) return res.status(500).send();
+            return res.status(200).send(user);
         });
-
-    })
-
-
-
-
-})
+    });
+});
 
 module.exports = router;
