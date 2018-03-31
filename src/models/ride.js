@@ -1,25 +1,41 @@
-const mongoose = require('mongoose');
+var mongoose = require('mongoose');
 
 /**
  * Declare our schema for a Ride.
  */
-const RideSchema = new mongoose.Schema({
+var RideSchema = new mongoose.Schema({
+  departing_datetime: Date,
   departing_from: String,
   arriving_at: String,
-  departure_time: Date,
+  meeting_location: String,
 
-  /* for rider, we need to tell MongoDB to reference the User model here. */
-  riders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  /* for owner and rider, we need to tell MongoDB to reference the User model here. */
+  owner: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  riders: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
+
+
+  /* Below are currently unused */
+  title: String,
+  description: String,
+  spots: Number,
+  cost: Number,
+  vehicle_type: String,
+  departure_address: String,
+  arrival_address: String,
+  /* Example: { departure_location: { "type": "Point", "coordinates": [0.0, 0.0] } */
+  departure_location: {type: String, coordinates: [Number]}, // [longitude, latitude]
+  arrival_location: {type: String, coordinates: [Number]} // [longitude, latitude]
 });
 
 /**
- * The riders field only contains IDs that reference the User objects, not the actual object.
- * Before we send our Ride object, we need to 'populate' this field with its actual User objects.
+ * The owner and riders fields only contain IDs that reference the User objects, not the actual object. Before we send
+ * our Ride object, we need to 'populate' these fields with their actual User objects.
  * This is a type of 'middleware.'
  *
  * @param next is a function passed in by mongoose that we need to call after we do our population.
  */
-const autoPopulate = function (next) {
+var autoPopulate = function (next) {
+  this.populate('owner');
   this.populate('riders');
   next();
 };

@@ -1,5 +1,7 @@
-const express = require('express');
+const _ = require('underscore');
 
+const express = require('express');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 const bodyParser = require('body-parser');
 
@@ -7,6 +9,8 @@ const User = require('../models/user');
 const authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
+router.use(authMiddleWare);
+
 
 if (process.env.NODE_ENV !== 'test') {
   router.use(authMiddleWare);
@@ -41,17 +45,44 @@ router.post('/', (req, res) => {
 
 router.delete('/:username', (req, res) => {
   User.findOne({ username: req.params.username }, (err, user) => {
-    if (err) return res.status(500);
-    if (!res) return res.status(404);
+    if (err) return res.status(500).send();
+    if (!res) return res.status(404).send();
 
     User.remove({
       _id: user._id,
     }, () => {
-      if (err) return res.status(500);
+      if (err) return res.status(500).send();
       return res.status(200).send(user);
     });
     return 0;
   });
 });
+
+router.put('/:username', (req, res) => {
+    User.findOne({username: req.params.username}, (err, user) => {
+
+        if (req.userData.username !== req.params.username) {
+            return res.status(401).send();
+        }
+
+        if (err) {
+            return res.status(500).send();
+        }
+
+        if (!user) {
+            return res.status(404).send();
+        }
+
+        user = _.extend(user, req.user);
+        user.save(function (err, usr) {
+            res.status(200).send(usr);
+        });
+
+    })
+
+
+
+
+})
 
 module.exports = router;
