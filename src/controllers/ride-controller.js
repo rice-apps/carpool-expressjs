@@ -9,88 +9,91 @@ var authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
-if(process.env.NODE_ENV !== 'test') {
-    router.use(authMiddleWare);
-    console.log(process.env.NODE_ENV);
+if (process.env.NODE_ENV !== 'test') {
+  router.use(authMiddleWare);
+  console.log(process.env.NODE_ENV);
 }
 
 /**
  * Returns all rides.
  */
 router.get('/', function (request, response) {
-   //'find' returns all objects matching the given query - and all objects match the empty query "{}".
+  //'find' returns all objects matching the given query - and all objects match the empty query "{}".
 
-   // Most db operations take a function as their second argument, which is called after the query completes. This
-   // function executes after the operation finishes - if there's an error, the first argument (err) is true. If not,
-   // the second argument (rides) contains our results.
-   Ride.find({}, function (err, rides) {
-       if (err) {
-           return response.status(500); // db error (500 internal server error)
-       }
-       if (!rides) {
-           return response.status(404); // not found (404 not found)
-       }
-       response.status(200).send(rides); // success - send the rides!
-   })
+  // Most db operations take a function as their second argument, which is called after the query completes. This
+  // function executes after the operation finishes - if there's an error, the first argument (err) is true. If not,
+  // the second argument (rides) contains our results.
+  Ride.find({}, function (err, rides) {
+    if (err) {
+      return response.status(500); // db error (500 internal server error)
+    }
+    if (!rides) {
+      return response.status(404); // not found (404 not found)
+    }
+    response.status(200).send(rides); // success - send the rides!
+  })
 });
 
 router.get('/:ride_id', function (req, res) {
-   Ride.findById(req.params.ride_id, function (err, ride) {
-       if (err) res.status(500);
-       if (!ride) res.status(404);
-       res.status(200).send(ride);
-   })
+  Ride.findById(req.params.ride_id, function (err, ride) {
+    if (err) res.status(500);
+    if (!ride) res.status(404);
+    res.status(200).send(ride);
+  })
 });
 
 /**
  * Post a single ride.
  */
 router.post('/', function (req, res) {
-    // grab the username out of the request and find that user in the database
-    User.findOne({ username: req.userData.user }, function (err, thisUser) {
-        if (err) return res.status(500);
-        if (!user) return res.status(401);
-        Ride.create({
-            title: req.body.title,
-            description: req.body.description,
-            owner: thisUser
-        }, function (err, ride) {
-            if (err) return res.status(500);
-            res.status(200).send(ride);
-        });
+  User.findOne({username: req.userData.user}, function (err, user) {
+    if (err) res.status(500).send();
+    if (!user) res.status(404).send();
+    Ride.create({
+      departing_datetime: req.body.departing_datetime,
+      arriving_at: req.body.arriving_at,
+      meeting_at: req.body.meeting_at,
+      departing_from: req.body.departing_from,
+      riders: [user._id]
+    }, function (err, ride) {
+      if (err) return res.status(500).send();
+      res.status(200).send(ride);
     });
+  })
+
+
 });
 
 /**
  * Post a user to a ride.
  */
 router.post('/:ride_id/book', function (req, res) {
-   User.findOne({ username: req.userData.user }, function (err, user) {
-       if (err) res.status(500).send();
-       if (!user) res.status(404).send();
-       Ride.findById(req.params.ride_id, function (err, ride) {
-           if (err) res.status(500).send();
+  User.findOne({username: req.userData.user}, function (err, user) {
+    if (err) res.status(500).send();
+    if (!user) res.status(404).send();
+    Ride.findById(req.params.ride_id, function (err, ride) {
+      if (err) res.status(500).send();
 
-           if (includes(ride.riders, user.username)) {
-               res.status(403).send("User exists on ride");
-           } else {
-               ride.riders.push(user);
-               ride.save(function (err, newRide) {
-                   if (err) res.status(500).send();
-                   res.status(200).send(newRide);
-               });
-           }
-       })
-   })
+      if (includes(ride.riders, user.username)) {
+        res.status(403).send("User exists on ride");
+      } else {
+        ride.riders.push(user);
+        ride.save(function (err, newRide) {
+          if (err) res.status(500).send();
+          res.status(200).send(newRide);
+        });
+      }
+    })
+  })
 });
 
-var includes = function (array, username) {
-    for (var i = 0; i < array.length; i++) {
-        if (array[i].username === username) return true;
-    }
-    return false;
-};
 
+var includes = function (array, username) {
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].username === username) return true;
+  }
+  return false;
+};
 
 
 module.exports = router;

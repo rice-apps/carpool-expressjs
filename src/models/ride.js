@@ -4,29 +4,27 @@ var mongoose = require('mongoose');
  * Declare our schema for a Ride.
  */
 var RideSchema = new mongoose.Schema({
-    description: String,
-    spots: Number,
-    departure_time: Date,
-    arrival_time: Date,
-    departing_from: String,
-    arriving_at: String,
-    meeting_location: String,
+  departing_datetime: Date,
+  departing_from: String,
+  arriving_at: String,
+  meeting_location: String,
 
-    /* for owner and rider, we need to tell MongoDB to reference the User model here. */
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    riders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  /* for owner and rider, we need to tell MongoDB to reference the User model here. */
+  owner: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  riders: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
 
 
-
-    /* Below are currently unused */
-    title: String,
-    cost: Number,
-    vehicle_type: String,
-    departure_address: String,
-    arrival_address: String,
-    /* Example: { departure_location: { "type": "Point", "coordinates": [0.0, 0.0] } */
-    departure_location: { type: String, coordinates: [Number]}, // [longitude, latitude]
-    arrival_location: { type: String, coordinates: [Number]} // [longitude, latitude]
+  /* Below are currently unused */
+  title: String,
+  description: String,
+  spots: Number,
+  cost: Number,
+  vehicle_type: String,
+  departure_address: String,
+  arrival_address: String,
+  /* Example: { departure_location: { "type": "Point", "coordinates": [0.0, 0.0] } */
+  departure_location: {type: String, coordinates: [Number]}, // [longitude, latitude]
+  arrival_location: {type: String, coordinates: [Number]} // [longitude, latitude]
 });
 
 /**
@@ -37,9 +35,9 @@ var RideSchema = new mongoose.Schema({
  * @param next is a function passed in by mongoose that we need to call after we do our population.
  */
 var autoPopulate = function (next) {
-    this.populate('owner');
-    this.populate('riders');
-    next();
+  this.populate('owner');
+  this.populate('riders');
+  next();
 };
 
 /**
