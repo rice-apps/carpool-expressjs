@@ -24,6 +24,18 @@ router.get('/:username', (req, res) => {
   });
 });
 
+router.get('/checked/:username', (req, res) => {
+  if (req.userData.user !== req.params.username) {
+    return res.status(401).send();
+  }
+  
+  User.findOne({ username: req.params.username }, (err, user) => {
+    if (err) return res.status(500);
+    if (!res || user === null) return res.status(404).send('404');
+    return res.status(200).send(user);
+  });
+});
+
 router.post('/', (req, res) => {
   User.findOne({ username: req.query.username }, (err, user) => {
     if (err) return res.status(500);
@@ -58,7 +70,7 @@ router.delete('/:username', (req, res) => {
   });
 });
 
-router.put('/:username/edit', (req, res) => {
+router.put('/:username/edit', (req, res) => {  
     User.findOne({username: req.params.username}, (err, user) => {
         if (req.userData.user !== req.params.username) {
             return res.status(401).send();
