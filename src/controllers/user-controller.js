@@ -4,6 +4,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const bodyParser = require('body-parser');
+const emojiStrip = require('emoji-strip');
 
 const User = require('../models/user');
 const authMiddleWare = require('../middleware/auth-middleware');
@@ -31,8 +32,8 @@ router.post('/', (req, res) => {
     if (user) return res.status(403).send('403');
     User.create({
       username: req.query.username,
-      first_name: req.query.first_name || req.query.username,
-      last_name: req.query.last_name || '',
+      first_name: emojiStrip(req.query.first_name) || req.query.username,
+      last_name: emojiStrip(req.query.last_name) || '',
       email: req.query.email || `${req.query.username}@rice.edu`,
       phone: req.query.phone || '',
     }, (writeErr, writeUser) => {
@@ -66,6 +67,9 @@ router.put('/:username/edit', (req, res) => {
 
         if (err) return res.status(500).send();
         if (!user) return res.status(404).send();
+
+        req.body.first_name = emojiStrip(req.body.first_name);
+        req.body.last_name = emojiStrip(req.body.last_name);
 
         // Extend the user (copies values from req.body onto user) and save it if req is sent by a valid user.
         if (!(Object.keys(req.body).every(function(prop) {return User.schema.paths.hasOwnProperty(prop);}))) {
