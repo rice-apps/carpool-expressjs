@@ -1,7 +1,7 @@
 const _ = require('underscore');
 
 const express = require('express');
-const jwt = require('jsonwebtoken');
+
 const router = express.Router();
 const bodyParser = require('body-parser');
 
@@ -28,12 +28,14 @@ router.get('/checked/:username', (req, res) => {
   if (req.userData.user !== req.params.username) {
     return res.status(401).send();
   }
-  
+
   User.findOne({ username: req.params.username }, (err, user) => {
     if (err) return res.status(500);
     if (!res || user === null) return res.status(404).send('404');
     return res.status(200).send(user);
   });
+
+  return 0;
 });
 
 router.post('/', (req, res) => {
@@ -70,25 +72,27 @@ router.delete('/:username', (req, res) => {
   });
 });
 
-router.put('/:username/edit', (req, res) => {  
-    User.findOne({username: req.params.username}, (err, user) => {
-        if (req.userData.user !== req.params.username) {
-            return res.status(401).send();
-        }
+router.put('/:username/edit', (req, res) => {
+  User.findOne({ username: req.params.username }, (err, user) => {
+    if (req.userData.user !== req.params.username) {
+      return res.status(401).send();
+    }
 
-        if (err) return res.status(500).send();
-        if (!user) return res.status(404).send();
+    if (err) return res.status(500).send();
+    if (!user) return res.status(404).send();
 
-        // Extend the user (copies values from req.body onto user) and save it if req is sent by a valid user.
-        if (!(Object.keys(req.body).every(function(prop) {return User.schema.paths.hasOwnProperty(prop);}))) {
-            return res.status(400).send("Given object does not match db format");
-        }
-        user = _.extend(user, req.body);
-        user.save((err, user) => {
-            if(err) return res.status(500).send();
-            return res.status(200).send(user);
-        });
+    // Extend the user (copies values from req.body onto user) and save it if req is sent by a valid user.
+    if (!(Object.keys(req.body).every(prop => User.schema.paths.hasOwnProperty(prop)))) {
+      return res.status(400).send('Given object does not match db format');
+    }
+    user = _.extend(user, req.body);
+    user.save((err, user) => {
+      if (err) return res.status(500).send();
+      return res.status(200).send(user);
     });
+  });
+
+  return 0;
 });
 
 module.exports = router;
