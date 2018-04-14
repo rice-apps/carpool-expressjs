@@ -13,6 +13,8 @@ if (process.env.NODE_ENV !== 'test') {
   router.use(authMiddleWare);
 }
 
+router.use(authMiddleWare);
+
 const includes = (array, username) => {
   for (let i = 0; i < array.length; i += 1) {
     if (array[i].username === username) return true;
@@ -94,5 +96,27 @@ router.post('/:ride_id/book', function (req, res) {
   })
 });
 
+/**
+ * Delete a user from a ride.
+ */
+router.delete('/:ride_id/:user_id', function (req, res) {
+  if (req.userData.user === req.params.user_id) {
+    Ride.findById(req.params.ride_id, function (err, ride) {
+        let newRide;
+        if (err) res.status(500).send();
+        if (includes(ride.riders, req.userData.user)) {
+            ride.riders = ride.riders.filter(ele => ele.username!==req.userData.user);
+            ride.save(function (err) {
+              if (err) return res.status(500).send();
+              return res.status(200).send(newRide);
+            });
+        } else {
+            return res.status(404).send("User does not exist on ride!");
+        }
+    });
+  } else {
+    return res.status(403).send();
+  }
+});
 
 module.exports = router;
