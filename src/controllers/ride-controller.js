@@ -102,13 +102,12 @@ router.post('/:ride_id/book', function (req, res) {
 router.delete('/:ride_id/:user_id', function (req, res) {
   if (req.userData.user === req.params.user_id) {
     Ride.findById(req.params.ride_id, function (err, ride) {
-        let newRide;
         if (err) res.status(500).send();
         if (includes(ride.riders, req.userData.user)) {
             ride.riders = ride.riders.filter(ele => ele.username!==req.userData.user);
             ride.save(function (err) {
               if (err) return res.status(500).send();
-              return res.status(200).send(newRide);
+              return res.status(200).send(ride);
             });
         } else {
             return res.status(404).send("User does not exist on ride!");
