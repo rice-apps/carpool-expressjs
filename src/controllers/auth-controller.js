@@ -20,9 +20,11 @@ router.use(bodyParser.json());
 router.get('/', function (req, res) {
 
   var ticket = req.query.ticket;
+  console.log(req.query)
 
   if (ticket) {
     // validate our ticket against the CAS server
+      //serviceURL = localhost:4200
     var url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
     request(url, function (err, response, body) {
 

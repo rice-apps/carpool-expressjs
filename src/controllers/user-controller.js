@@ -9,7 +9,7 @@ const User = require('../models/user');
 const authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
-router.use(authMiddleWare);
+// router.use(authMiddleWare);
 
 
 if (process.env.NODE_ENV !== 'test') {

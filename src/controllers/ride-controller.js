@@ -13,7 +13,7 @@ if (process.env.NODE_ENV !== 'test') {
   router.use(authMiddleWare);
 }
 
-router.use(authMiddleWare);
+// router.use(authMiddleWare);
 
 const includes = (array, username) => {
   for (let i = 0; i < array.length; i += 1) {
