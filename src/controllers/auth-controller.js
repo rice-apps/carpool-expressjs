@@ -20,7 +20,7 @@ router.use(bodyParser.json());
 router.get('/', function (req, res) {
 
   var ticket = req.query.ticket;
-  console.log(req.query)
+  console.log(req.query);
 
   if (ticket) {
     // validate our ticket against the CAS server

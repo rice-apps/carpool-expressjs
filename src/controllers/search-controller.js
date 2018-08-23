@@ -11,9 +11,10 @@ const inTimeRange = (time, target, tolerance) => Math.abs(time - target) <= tole
 
 router.use(bodyParser.json());
 
-if (process.env.NODE_ENV !== 'test') {
-  router.use(authMiddleWare);
-}
+// if (process.env.NODE_ENV !== 'test') {
+//   router.use(authMiddleWare);
+// }
+router.use(authMiddleWare);
 
 router.get('/', (req, res) => {
   const query = {};

@@ -9,11 +9,11 @@ var authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
-if (process.env.NODE_ENV !== 'test') {
-  router.use(authMiddleWare);
-}
+// if (process.env.NODE_ENV !== 'test') {
+//   router.use(authMiddleWare);
+// }
 
-// router.use(authMiddleWare);
+router.use(authMiddleWare);
 
 const includes = (array, username) => {
   for (let i = 0; i < array.length; i += 1) {
@@ -78,18 +78,31 @@ router.post('/', function (req, res) {
  */
 router.post('/:ride_id/book', function (req, res) {
   User.findOne({username: req.userData.user}, function (err, user) {
-    if (err) res.status(500).send();
+    if (err) {
+        // console.log("500 error for finding user: " + err)
+        res.status(500).send()
+    };
     if (!user) res.status(404).send();
     Ride.findById(req.params.ride_id, function (err, ride) {
-      if (err) res.status(500).send();
-
+        if (err) {
+            // console.log("500 error for finding ride: " + err)
+            res.status(500).send()
+        };
       if (includes(ride.riders, user.username)) {
         res.status(403).send("User exists on ride");
       } else {
-        ride.riders.push(user);
+          //console.log("this is what riders look like: "+ride.riders)
+          //console.log("this is what the new rider look like: " + user)
+          ride.riders.push(user);
+          //console.log("this is what new riders look like:" + ride.riders)
+          let newRiders = ride.riders
+          ride.set({riders: newRiders})
         ride.save(function (err, newRide) {
-          if (err) res.status(500).send();
-          res.status(200).send(newRide);
+            if (err) {
+                console.log("500 error for saving ride: " + err)
+                res.status(500).send()
+            };
+            res.status(200).send(newRide);
         });
       }
     })
@@ -100,6 +113,7 @@ router.post('/:ride_id/book', function (req, res) {
  * Delete a user from a ride.
  */
 router.delete('/:ride_id/:user_id', function (req, res) {
+    /** TODO: check if ride has 0 riders, if yes then delete. */
   if (req.userData.user === req.params.user_id) {
     Ride.findById(req.params.ride_id, function (err, ride) {
         if (err) res.status(500).send();
