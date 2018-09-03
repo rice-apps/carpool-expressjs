@@ -128,14 +128,11 @@ router.delete('/:ride_id/:user_id', function (req, res) {
             return res.status(404).send("User does not exist on ride!");
         }
     });
-  else {
-    return res.status(403).send();
-  }
+  // else {
+  //   return res.status(403).send();
+  // }
   }
 });
-
-
-
 
 
 /**
