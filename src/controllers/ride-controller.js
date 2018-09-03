@@ -135,9 +135,6 @@ router.delete('/:ride_id/:user_id', function (req, res) {
 });
 
 
-
-
-
 /**
  * Delete a ride.
  */
