@@ -15,6 +15,7 @@ router.use(bodyParser.json());
 
 router.use(authMiddleWare);
 
+
 const includes = (array, username) => {
   for (let i = 0; i < array.length; i += 1) {
     if (array[i].username === username) return true;
@@ -113,23 +114,56 @@ router.post('/:ride_id/book', function (req, res) {
  * Delete a user from a ride.
  */
 router.delete('/:ride_id/:user_id', function (req, res) {
-    /** TODO: check if ride has 0 riders, if yes then delete. */
   if (req.userData.user === req.params.user_id) {
     Ride.findById(req.params.ride_id, function (err, ride) {
         if (err) res.status(500).send();
         if (includes(ride.riders, req.userData.user)) {
             ride.riders = ride.riders.filter(ele => ele.username!==req.userData.user);
-            ride.save(function (err) {
-              if (err) return res.status(500).send();
-              return res.status(200).send(ride);
+            ride.save(function(err){
+                if (err) return res.status(500).send();
+                return res.status(200).send(ride);
             });
-        } else {
+        }
+        else {
             return res.status(404).send("User does not exist on ride!");
         }
     });
-  } else {
+  else {
     return res.status(403).send();
+  }
   }
 });
 
+
+
+
+
+/**
+ * Delete a ride.
+ */
+// router.delete('/:ride_id', function(req, res) {
+//     //delete a ride - diksha
+//     Ride.remove(req.params.ride_id, function (err, ride) {
+//         console.log("THIS IS THE RIDE: "+ride)
+//         if (err)
+//             res.status(500).send();
+//         else
+//             ride.status(200).send(ride)
+//     })
+// })
+
+
+// diksha code
+// if (ride.riders.length == 0){
+//     Ride.remove(req.params.ride_id, function(err,result){
+//         console.log("RESULT: " + result)
+//         if (err) { res.status(404).send("failed to remove ride")}
+//     });
+// }
+// else{
+//     ride.save(function (err) {
+//         if (err) return res.status(500).send();
+//         return res.status(200).send(ride);
+//     });
+// }
 module.exports = router;

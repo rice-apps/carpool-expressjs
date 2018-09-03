@@ -48,7 +48,7 @@ router.post('/', (req, res) => {
       first_name: req.query.first_name || req.query.username,
       last_name: req.query.last_name || '',
       email: req.query.email || `${req.query.username}@rice.edu`,
-      phone: req.query.phone || '',
+      phone: req.query.phone || req.query.phone || '',
     }, (writeErr, writeUser) => {
       if (writeErr) return res.status(500);
       return res.status(200).send(writeUser);
