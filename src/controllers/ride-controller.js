@@ -7,13 +7,13 @@ var Ride = require('../models/ride');
 var User = require('../models/user');
 var authMiddleWare = require('../middleware/auth-middleware');
 
-// router.use(bodyParser.json());
+router.use(bodyParser.json());
 
-if (process.env.NODE_ENV !== 'test') {
-  router.use(authMiddleWare);
-}
+// if (process.env.NODE_ENV !== 'test') {
+//   router.use(authMiddleWare);
+// }
 
-// router.use(authMiddleWare);
+router.use(authMiddleWare);
 
 
 const includes = (array, username) => {
@@ -56,13 +56,9 @@ router.get('/:ride_id', function (req, res) {
  * Post a single ride.
  */
 router.post('/', function (req, res) {
-    console.log(req.body);
-    console.log(req);
   User.findOne({username: req.userData.user}, function (err, user) {
     if (err) res.status(500).send();
     if (!user) res.status(404).send();
-
-
     Ride.create({
       departing_datetime: req.body.departing_datetime,
       arriving_at: req.body.arriving_at,

@@ -10,33 +10,13 @@ const authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
-if (process.env.NODE_ENV !== 'test') {
-  router.use(authMiddleWare);
-}
-// router.use(authMiddleWare);
-
-/**
- * Returns all users.
- */
-router.get('/', function (request, response) {
-    // 'find' returns all objects matching the given query - and all objects match the empty query "{}".
-
-    // Most db operations take a function as their second argument, which is called after the query completes. This
-    // function executes after the operation finishes - if there's an error, the first argument (err) is true. If not,
-    // the second argument (rides) contains our results.
-    User.find({}, function (err, users) {
-        if (err) {
-            return response.status(500); // db error (500 internal server error)
-        }
-        if (!users) {
-            return response.status(404); // not found (404 not found)
-        }
-        response.status(200).send(users); // success - send the user!
-    })
-});
+// if (process.env.NODE_ENV !== 'test') {
+//   router.use(authMiddleWare);
+// }
+router.use(authMiddleWare);
 
 
-router.get('/:username', function (req, res) {
+router.get('/:username', (req, res) => {
   User.findOne({ username: req.params.username }, (err, user) => {
     if (err) return res.status(500);
     if (!res || user === null) return res.status(404).send('404');
@@ -87,10 +67,10 @@ router.delete('/:username', (req, res) => {
     }, () => {
       if (err) return res.status(500).send();
       return res.status(200).send(user);
-    })
+    });
     return 0;
-  })
-})
+  });
+});
 
 router.put('/:username/edit', (req, res) => {
   User.findOne({ username: req.params.username }, (err, user) => {
