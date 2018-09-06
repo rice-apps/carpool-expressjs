@@ -21,8 +21,7 @@ Although the idea aims to make the process of carpooling convinent, there are ma
 is not the most effective way of implementing the idea: 
 1. It doesnt not have a smooth interface, therefore people prefer to not use it. Since all rides are on one sheet, it is hard to navigate rides, due to congestion and scrolling.
 2. There are not enough successful rides, most rides on the page end up with a single person because of disregard of factors like time flexibility, so even rides that differ by 30 mins are separate rides, even if the creator of the ride has flexible timing. since they don't provide a time frame.
-3. There is also the security concerns with exposing one’s personal information on a public page. 
-  - Anyone can alter information on the excel sheet, such as deleting/changing information. 
+3. There is also the security concerns with exposing one’s personal information on a public page. Moreover, anyone can alter information on the excel sheet, such as deleting/changing information. 
 4. There is no notification if a rider joins or leaves your ride, which means people either don't turn up for rides they signed up for.
 
 #### Underserved Need
@@ -49,61 +48,88 @@ We have two distinct problems with this situation, one of which we focus in our 
 5. They meet up at the confirmed meet-up place and book and uber through one rider's phone, and the other riders venmo the rider their amount. 
 
 ## Interviews
-*Subject 1: Sophomore, out-of-state, female*
-**How many times do you travel to and from the airport in a school year? Minimally and maximally?**
-Maximum 6 times and minimum 4 times, in winter and summer break.  
-**Which airport do you usually travel to?**
-Hobby 
-**How do you usually travel their? Do friends/family members drop you? Do you use peer-to-peer ride services**
-Uber, usually. 
-**If uber/lyft, what do you think about the prices?**
-It’s honestly not that bad. It’s around $20. 
-**If you had the option to carpool with another Rice student, would you prefer traveling alone or carpooling? Why?**
-I would honestly carpool with a Rice student, and not because of the money, but mainly because I feel more comfortable going with someone I know studies with me. Especially if it's an early morning or late night flight, I don’t feel very comfortable travelling alone with a stranger honestly. 
-*Subject 2:Sophomore, out-of-state, female*
-**How many times do you travel to / from the airport in a school year? Minimally and maximally?**
-Around 3 to 4 times, during major holidays. 
-**Which airport do you usually travel to?**
-I usually go to IAH, and I travel to Ohio.
-**How do you usually travel there? Do friends/family members drop you? Do you use peer-to-peer ride services?**
-I usually split an uber with friends of use the google sheets thing to find people to share cost with because uber is like too expensive, around $45.If I can’t find anyone I travel alone though.
-**How did you find out about the google sheets?**
-I don’t remember, I think it just popped up on facebook. 
-**How many times have you used the sheets and how were those experiences?**
-Well, I only used it twice. The first time it was successful and the second time it didnt work out because the other person ditched last minute. I called them and they said they weren’t planning on showing up. 
-**How was your experience with navigating the googles sheets? What do you like and dislike about it?**
-I really like how convenient it is, and I like how they have organized it neatly with time and colors. I hate how there is no accountability for signing up for a ride though, like people can just bail last minute. I also dislike that it doesn’t refresh, like the rides from the last major holiday are still there and it sucks to have to scroll through all that. 
-**How do you prioritize when choosing a carpool, is it by time or meeting place or riders or something else?**
-I think it’s mainly friends for me. I’m willing to go 4 hours earlier if I can go with a friend instead. That’s why one of the main sections I look at is the people in the google sheets.
-**Is security really an issue for you? Do you think people outside of rice having access to your number is a matter of concern?**
-I never really thought about it to be honest. It’s very unlikely I’ll get a stalker haha.
-**Have you ever used other carpool apps like waze or uber if you couldn’t find a ride on google sheets?**
-Oh no, I don't ever use uber carpool. I hate the idea of travelling with a complete stranger.
-*Subject 3: Rice sophomore, out-of-state, male*
-**How many times do you travel to and from the airport in a school year? **
-Around 6 times, I think.
-**Which airport do you usually travel to? And is it out of state or out of country?**
-Hobby mainly, sometimes IAH. And I go out-of-state.
-**How do you usually travel there? Do friends/family members drop you? Do you use peer-to-peer ride services?**
-I usually share uber/lyft with friends, just to save cost.
-**How do you usually find friends to carpool with?**
-Well, I have a friend from high school who goes back around the same time every year so when I go from Rice to the airport I go with her. Coming back, I find a person though word-of-mouth or use this google sheets page on facebook. Or just ride alone.
-**How did you find out about the google sheets service?**
-I think someone posted it on the Lovett or Rice 2021 facebook page. 
-**How many times have you used the google sheets? And how was your experience?**
-I’ve only used it once I think. Oh one time I used it but ended up cancelling the plan because I found a close friend to go with. The other time it didn’t work out because no one contacted me from the airport. I was waiting for them around 30 mins and their number wasn’t working either. Luckily I found a friend at the airport so I ubered with her. 
-I don’t usually use the google sheets when I’m travelling from Rice to airport because I can just talk to friends here. I only use it coming back because texting everyone is very cumbersome.
-**How was your experience with navigating the googles sheets? What do you like and dislike about it?**
-I like the convenience of it, it’s a lot easier than texting friends. And I also enjoy the color coordination and the neat format. I dont like how sometimes there are overlapping rides with the same date and close times because some person was too lazy to scroll through the rides and just added their own at the end.
 
-**If you could add any functionality or new features to the google sheets what would you like to see?**
-I think notification would be a good add on, so I dont have to constantly check who joined and left. It would be even cooler if it could just make an automatic group chat, like on text or facebook messenger. 
-**Have you ever used other carpool apps like waze or uber if you couldn’t find a ride on google sheets?**
-Uber carpool doesn’t show up as an option for me. And I havent found any other reputable app right now but if that was the case, I would use it!
+*Subject 1: Sophomore, out-of-state, female*  
+
+**How many times do you travel to and from the airport in a school year? Minimally and maximally?**  
+Maximum 6 times and minimum 4 times, in winter and summer break.  
+
+**Which airport do you usually travel to?**  
+Hobby  
+
+**How do you usually travel their? Do friends/family members drop you? Do you use peer-to-peer ride services?**  
+Uber, usually.  
+
+**If uber/lyft, what do you think about the prices?**  
+It’s honestly not that bad. It’s around $20.  
+
+**If you had the option to carpool with another Rice student, would you prefer traveling alone or carpooling? Why?**  
+I would honestly carpool with a Rice student, and not because of the money, but mainly because I feel more comfortable going with someone I know studies with me. Especially if it's an early morning or late night flight, I don’t feel very comfortable travelling alone with a stranger honestly.  
+
+*Subject 2:Sophomore, out-of-state, female* 
+
+**How many times do you travel to / from the airport in a school year? Minimally and maximally?**  
+Around 3 to 4 times, during major holidays.  
+
+**Which airport do you usually travel to?**  
+I usually go to IAH, and I travel to Ohio.  
+
+**How do you usually travel there? Do friends/family members drop you? Do you use peer-to-peer ride services?**  
+I usually split an uber with friends of use the google sheets thing to find people to share cost with because uber is like too expensive, around $45.If I can’t find anyone I travel alone though.  
+
+**How did you find out about the google sheets?**  
+I don’t remember, I think it just popped up on facebook.  
+
+**How many times have you used the sheets and how were those experiences?**  
+Well, I only used it twice. The first time it was successful and the second time it didnt work out because the other person ditched last minute. I called them and they said they weren’t planning on showing up.   
+
+**How was your experience with navigating the googles sheets? What do you like and dislike about it?**  
+I really like how convenient it is, and I like how they have organized it neatly with time and colors. I hate how there is no accountability for signing up for a ride though, like people can just bail last minute. I also dislike that it doesn’t refresh, like the rides from the last major holiday are still there and it sucks to have to scroll through all that.  
+
+**How do you prioritize when choosing a carpool, is it by time or meeting place or riders or something else?**  
+I think it’s mainly friends for me. I’m willing to go 4 hours earlier if I can go with a friend instead. That’s why one of the main sections I look at is the people in the google sheets.  
+
+**Is security really an issue for you? Do you think people outside of rice having access to your number is a matter of concern?**  
+I never really thought about it to be honest. It’s very unlikely I’ll get a stalker (laughs).  
+
+**Have you ever used other carpool apps like waze or uber if you couldn’t find a ride on google sheets?**  
+Oh no, I don't ever use uber carpool. I hate the idea of travelling with a complete stranger.
+
+*Subject 3: Rice sophomore, out-of-state, male*  
+
+**How many times do you travel to and from the airport in a school year?**  
+Around 6 times, I think.  
+
+**Which airport do you usually travel to? And is it out of state or out of country?**  
+Hobby mainly, sometimes IAH. And I go out-of-state.  
+
+**How do you usually travel there? Do friends/family members drop you? Do you use peer-to-peer ride services?**  
+I usually share uber/lyft with friends, just to save cost.  
+
+**How do you usually find friends to carpool with?**  
+Well, I have a friend from high school who goes back around the same time every year so when I go from Rice to the airport I go with her. Coming back, I find a person though word-of-mouth or use this google sheets page on facebook. Or just ride alone.  
+
+**How did you find out about the google sheets service?**  
+I think someone posted it on the Lovett or Rice 2021 facebook page.   
+
+**How many times have you used the google sheets? And how was your experience?**  
+I’ve only used it once I think. Oh one time I used it but ended up cancelling the plan because I found a close friend to go with. The other time it didn’t work out because no one contacted me from the airport. I was waiting for them around 30 mins and their number wasn’t working either. Luckily I found a friend at the airport so I ubered with her.   
+I don’t usually use the google sheets when I’m travelling from Rice to airport because I can just talk to friends here. I only use it coming back because texting everyone is very cumbersome.  
+
+**How was your experience with navigating the googles sheets? What do you like and dislike about it?**  
+I like the convenience of it, it’s a lot easier than texting friends. And I also enjoy the color coordination and the neat format. I dont like how sometimes there are overlapping rides with the same date and close times because some person was too lazy to scroll through the rides and just added their own at the end.  
+
+**If you could add any functionality or new features to the google sheets what would you like to see?**  
+I think notification would be a good add on, so I dont have to constantly check who joined and left. It would be even cooler if it could just make an automatic group chat, like on text or facebook messenger.  
+
+**Have you ever used other carpool apps like waze or uber if you couldn’t find a ride on google sheets?**  
+Uber carpool doesn’t show up as an option for me. And I havent found any other reputable app right now but if that was the case, I would use it!  
 
 ## Findings from our Customer Research 
 ### Students will prefer travelling with people they know rather than strangers, even if they have to go through a little extra trouble
-This further highlights the need of the Carpool App, since most student will not user Uber Carpool 
+This further highlights the need of the Carpool App, since most student will not user Uber Carpool.
+
+### 
 
 
 
