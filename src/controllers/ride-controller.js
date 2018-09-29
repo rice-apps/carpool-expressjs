@@ -53,13 +53,13 @@ router.get('/:ride_id', function (req, res) {
 });
 
 function pastrides(callback) {
-    var currentTime = new Date.now();
+    var currentTime = Date.now();
     Ride.find({ departing_datetime: { $lt: currentTime } }, function (err, rides) {
         callback(err, rides);
     });
 }
 
-router.get('/past', function (req, res) {
+router.get('/past/filter/d', function (req, res) {
     // TODO: figure out query & comparison time
     console.log("getting past rides - hello??");
 
@@ -77,12 +77,14 @@ router.get('/past', function (req, res) {
     });
 });
 
-router.get('/future/u', (req, res) => {
+router.get('/future/filter/d', (req, res) => {
     // TODO: figure out query & comparison time
-    var currentTime = new Date().now();
+
+    console.log("future w/ u");
+    var currentTime = Date.now();
 
     console.log(currentTime);
-    Ride.find({ 'departing_datetime': { '$gte': currentTime } }, (err, rides) => {
+    Ride.find({ departing_datetime: { $gte: currentTime } }, (err, rides) => {
         if (err) {
             return res.status(500); // db error (500 internal server error)
         }
@@ -99,22 +101,45 @@ router.get('/user/:user', (req, res) => {
     var currentTime = new Date().getTime();
     console.log("boutta query");
     console.log(currentTime);// req.params.user
-    Ride.find({ 'riders.username': 'lw48' }, (err, rides) => {
-        console.log("Rides");
-        console.log(rides);
-        console.log('riders.username');
+
+    // previously: { rides: { $elemMatch: { user: req.params.user } } }
+    // { riders: { $elemMatch: { username: 'alh9' } } }
+    // this works: { riders: { $size: 1 } }
+    // { riders: { $elemMatch: {_id: 5b9d47530906ec04b06535c0}}}
+    //const query ={};
+    User.find({ username:req.params.user }, (err, user) => {
         if (err) {
-            return response.status(500); // db error (500 internal server error)
+            console.log("whoops");
         }
-        if (!rides) {
-        return response.staus(404); // not found (404 not found)
-    }
-    res.status(200).send(rides);
+
+        // currentuser is an ARRAY containing one element - the user object.
+        var currentuser = user;
+        console.log("current:", currentuser);
+
+        // find all rides whose "riders" array contains all the elements in the "currentuser" array - technically
+        // only one user.
+        const query= { riders: { $all: currentuser} };
+        console.log("QUERY:", query);
+        Ride.find(query, (err, rides) => {
+            console.log("Rides", rides);
+
+            if (err) {
+                return res.status(500); // db error (500 internal server error)
+            }
+            if (!rides) {
+                return res.status(404); // not found (404 not found)
+            }
+            res.status(200).send(rides);
+        });
     });
+    //console.log("CURRENT USER:", currentuser);
+
 });
 
 router.get('/past/:user', (req, res) => {
     // TODO: get all the rides first and then filter further users
+
+    console.log("Past w/ user");
 
     // var currentTime = new Date().getTime();
     // console.log("boutta query");
@@ -138,18 +163,19 @@ router.get('/past/:user', (req, res) => {
 
 router.get('/future/:user', (req, res) => {
     // TODO: figure out query & comparison time
+    console.log("Future w/ user");
     var currentTime = new Date().getTime();
 
-console.log(currentTime);
-Ride.find({ departing_datetime: { $gte: currentTime } }, (err, rides) => {
-    if (err) {
-        return response.status(500); // db error (500 internal server error)
+    console.log(currentTime);
+    Ride.find({ departing_datetime: { $gte: currentTime } }, (err, rides) => {
+        if (err) {
+            return response.status(500); // db error (500 internal server error)
+        }
+        if (!rides) {
+        return response.status(404); // not found (404 not found)
     }
-    if (!rides) {
-    return response.status(404); // not found (404 not found)
-}
-res.status(200).send(rides);
-});
+    res.status(200).send(rides);
+    });
 });
 
 /**
