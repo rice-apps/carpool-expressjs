@@ -59,9 +59,12 @@ function pastrides(callback) {
     });
 }
 
+/*
+  Get all past rides.
+*/
+
 router.get('/past/filter/d', function (req, res) {
     // TODO: figure out query & comparison time
-    console.log("getting past rides - hello??");
 
     pastrides( function (err, rides) {
         if (err) {
@@ -77,49 +80,51 @@ router.get('/past/filter/d', function (req, res) {
     });
 });
 
+function futurerides(callback) {
+  var currentTime = Date.now();
+  Ride.find({ departing_datetime: { $gte: currentTime } }, function (err, rides) {
+      callback(err, rides);
+  });
+}
+
+/*
+  Get all rides occurring in the future.
+*/
+
 router.get('/future/filter/d', (req, res) => {
     // TODO: figure out query & comparison time
 
-    console.log("future w/ u");
-    var currentTime = Date.now();
-
-    console.log(currentTime);
-    Ride.find({ departing_datetime: { $gte: currentTime } }, (err, rides) => {
+    futurerides( function (err, rides) {
         if (err) {
             return res.status(500); // db error (500 internal server error)
         }
         if (!rides) {
-            return res.status(404); // not found (404 not found)
+            return res.staus(404); // not found (404 not found)
         }
         res.status(200).send(rides);
     });
 });
 
+/*
+  Get all rides containing the user.
+*/
+
 router.get('/user/:user', (req, res) => {
-    // TODO: figure out query & comparison time
 
     var currentTime = new Date().getTime();
-    console.log("boutta query");
-    console.log(currentTime);// req.params.user
 
-    // previously: { rides: { $elemMatch: { user: req.params.user } } }
-    // { riders: { $elemMatch: { username: 'alh9' } } }
-    // this works: { riders: { $size: 1 } }
-    // { riders: { $elemMatch: {_id: 5b9d47530906ec04b06535c0}}}
-    //const query ={};
     User.find({ username:req.params.user }, (err, user) => {
         if (err) {
-            console.log("whoops");
+            return res.status(500); // db error (500 internal server error)
         }
 
         // currentuser is an ARRAY containing one element - the user object.
         var currentuser = user;
-        console.log("current:", currentuser);
 
         // find all rides whose "riders" array contains all the elements in the "currentuser" array - technically
         // only one user.
         const query= { riders: { $all: currentuser} };
-        console.log("QUERY:", query);
+
         Ride.find(query, (err, rides) => {
             console.log("Rides", rides);
 
@@ -132,51 +137,9 @@ router.get('/user/:user', (req, res) => {
             res.status(200).send(rides);
         });
     });
-    //console.log("CURRENT USER:", currentuser);
 
 });
 
-router.get('/past/:user', (req, res) => {
-    // TODO: get all the rides first and then filter further users
-
-    console.log("Past w/ user");
-
-    // var currentTime = new Date().getTime();
-    // console.log("boutta query");
-    // console.log(currentTime);
-    // console.log(req);
-    // console.log(req.params.user );
-    // Ride.find({ riders: { $elemMatch: { user: req.params.user } }, departing_datetime: { $lt: currentTime }} , (err, rides) => {
-    //
-    //     if (err) {
-    //         return response.status(500); // db error (500 internal server error)
-    //     }
-    //     if (!rides) {
-    //         return response.staus(404); // not found (404 not found)
-    //     }
-    //     res.status(200).send(rides);
-    // });
-
-    //var pastrides =
-});
-
-
-router.get('/future/:user', (req, res) => {
-    // TODO: figure out query & comparison time
-    console.log("Future w/ user");
-    var currentTime = new Date().getTime();
-
-    console.log(currentTime);
-    Ride.find({ departing_datetime: { $gte: currentTime } }, (err, rides) => {
-        if (err) {
-            return response.status(500); // db error (500 internal server error)
-        }
-        if (!rides) {
-        return response.status(404); // not found (404 not found)
-    }
-    res.status(200).send(rides);
-    });
-});
 
 /**
  * Post a single ride.
