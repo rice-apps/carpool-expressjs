@@ -80,6 +80,40 @@ router.get('/past/filter/d', function (req, res) {
     });
 });
 
+/*
+    Get all past rides for a specific user
+ */
+
+router.get('/past/user/:user', function (req, res) {
+
+    var currentTime = new Date().getTime();
+
+    User.find({ username:req.params.user }, (err, user) => {
+        if (err) {
+            return res.status(500); // db error (500 internal server error)
+        }
+
+        // currentuser is an ARRAY containing one element - the user object.
+        var currentuser = user;
+
+        // find all rides whose "riders" array contains all the elements in the "currentuser" array - technically
+        // only one user.
+        const query= { $and: [{riders: { $all: currentuser}},{departing_datetime: { $lt: currentTime }}] };
+
+        Ride.find(query, (err, rides) => {
+            console.log("Rides", rides);
+
+            if (err) {
+                return res.status(500); // db error (500 internal server error)
+            }
+            if (!rides) {
+                return res.status(404); // not found (404 not found)
+            }
+            res.status(200).send(rides);
+        });
+    });
+})
+
 function futurerides(callback) {
   var currentTime = Date.now();
   Ride.find({ departing_datetime: { $gte: currentTime } }, function (err, rides) {
@@ -104,6 +138,39 @@ router.get('/future/filter/d', (req, res) => {
         res.status(200).send(rides);
     });
 });
+
+/*
+    Get all future rides for a specific user.
+ */
+router.get('/future/user/:user', function (req, res) {
+
+    var currentTime = new Date().getTime();
+
+    User.find({ username:req.params.user }, (err, user) => {
+        if (err) {
+            return res.status(500); // db error (500 internal server error)
+        }
+
+        // currentuser is an ARRAY containing one element - the user object.
+        var currentuser = user;
+
+        // find all rides whose "riders" array contains all the elements in the "currentuser" array - technically
+        // only one user.
+        const query= { $and: [{riders: { $all: currentuser}},{departing_datetime: { $gte: currentTime }}] };
+
+        Ride.find(query, (err, rides) => {
+            console.log("Rides", rides);
+
+            if (err) {
+                return res.status(500); // db error (500 internal server error)
+            }
+            if (!rides) {
+                return res.status(404); // not found (404 not found)
+            }
+            res.status(200).send(rides);
+        });
+    });
+})
 
 /*
   Get all rides containing the user.
