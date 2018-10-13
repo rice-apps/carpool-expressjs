@@ -9,11 +9,11 @@ var authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
-if (process.env.NODE_ENV !== 'test') {
-    router.use(authMiddleWare);
-}
+// if (process.env.NODE_ENV !== 'test') {
+//     router.use(authMiddleWare);
+// }
 
-//router.use(authMiddleWare);
+router.use(authMiddleWare);
 
 
 const includes = (array, username) => {
@@ -63,7 +63,7 @@ function pastrides(callback) {
   Get all past rides.
 */
 
-router.get('/past/filter/d', function (req, res) {
+router.get('/past/all/', function (req, res) {
     // TODO: figure out query & comparison time
 
     pastrides( function (err, rides) {
@@ -125,7 +125,7 @@ function futurerides(callback) {
   Get all rides occurring in the future.
 */
 
-router.get('/future/filter/d', (req, res) => {
+router.get('/future/all/', (req, res) => {
     // TODO: figure out query & comparison time
 
     futurerides( function (err, rides) {
