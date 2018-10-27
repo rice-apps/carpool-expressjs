@@ -29,7 +29,7 @@ router.get('/', (req, res) => {
     if (req.query.departure_time) {
       const target = new Date(req.query.departure_time).getTime();
 
-      return res.status(200).send(rides.filter(ride => inTimeRange(new Date(ride.departure_time).getTime(), target, 1800000))); // 30 min tol
+      return res.status(200).send(rides.filter(ride => inTimeRange(new Date(ride.departing_datetime).getTime(), target, 1800000))); // 30 min tol
     }
     return res.status(200).send(rides);
   });
