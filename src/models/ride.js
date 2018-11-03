@@ -8,6 +8,7 @@ var RideSchema = new mongoose.Schema({
   departing_from: String,
   arriving_at: String,
   meeting_location: String,
+  number_riders: String,
 
   /* for owner and rider, we need to tell MongoDB to reference the User model here. */
   owner: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
@@ -26,6 +27,7 @@ var RideSchema = new mongoose.Schema({
   departure_location: {type: String, coordinates: [Number]}, // [longitude, latitude]
   arrival_location: {type: String, coordinates: [Number]} // [longitude, latitude]
 });
+
 
 /**
  * The owner and riders fields only contain IDs that reference the User objects, not the actual object. Before we send

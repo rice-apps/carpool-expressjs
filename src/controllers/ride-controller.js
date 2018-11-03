@@ -215,12 +215,13 @@ router.post('/', (req, res) => {
     if (err) res.status(500).send();
     if (!user) res.status(404).send();
 
-
+      console.log(req.body.number_riders);
     Ride.create({
       departing_datetime: req.body.departing_datetime,
       arriving_at: req.body.arriving_at,
       meeting_at: req.body.meeting_at,
       departing_from: req.body.departing_from,
+      number_riders: req.body.number_riders,
       riders: [user._id],
     }, (err, ride) => {
       if (err) return res.status(500).send();
