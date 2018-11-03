@@ -27,6 +27,7 @@ var RideSchema = new mongoose.Schema({
   arrival_location: {type: String, coordinates: [Number]} // [longitude, latitude]
 });
 
+
 /**
  * The owner and riders fields only contain IDs that reference the User objects, not the actual object. Before we send
  * our Ride object, we need to 'populate' these fields with their actual User objects.

@@ -215,7 +215,7 @@ router.post('/', (req, res) => {
     if (err) res.status(500).send();
     if (!user) res.status(404).send();
 
-
+      console.log(req.body.number_riders);
     Ride.create({
       departing_datetime: req.body.departing_datetime,
       arriving_at: req.body.arriving_at,
