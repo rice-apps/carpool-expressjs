@@ -7,7 +7,7 @@ var RideSchema = new mongoose.Schema({
   departing_datetime: Date,
   departing_from: String,
   arriving_at: String,
-  meeting_location: String,
+  number_riders: String,
 
   /* for owner and rider, we need to tell MongoDB to reference the User model here. */
   owner: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
