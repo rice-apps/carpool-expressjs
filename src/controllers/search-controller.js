@@ -10,6 +10,9 @@ const authMiddleWare = require('../middleware/auth-middleware');
 const inTimeRange = (time, target, tolerance) => Math.abs(time - target) <= tolerance;
 const inFuture = (time, target) => time - target >= 0;
 
+// on this day - within 24 hours
+const onThisDay = (time, target, tolerance) => time - target <= tolerance;
+
 router.use(bodyParser.json());
 
 // if (process.env.NODE_ENV !== 'test') {
@@ -25,7 +28,11 @@ router.get('/', (req, res) => {
   // If departure_time is provided, provide rides occurring within 30 minutes.
   if (req.query.departure_time) {
     const target = new Date(req.query.departure_time).getTime();
-    query.departing_datetime = { $gte: target - 1800000, $lte: target + 1800000};
+    // The query below is for leaving within 30 minutes of the given time.
+  //  query.departing_datetime = { $gte: target - 1800000, $lte: target + 1800000};
+
+   // The query below is for leaving on day provided (the input date-time was a chosen date at 12 am).
+     query.departing_datetime = {  $gte: target, $lte: target + 86400000};
   }
 
   // else, only filter out past rides.
