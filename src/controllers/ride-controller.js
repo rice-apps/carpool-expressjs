@@ -10,12 +10,9 @@ const authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
-// if (process.env.NODE_ENV !== 'test') {
-//     router.use(authMiddleWare);
-// }
-
-router.use(authMiddleWare);
-
+if (process.env.NODE_ENV !== 'test') {
+  router.use(authMiddleWare);
+}
 
 const includes = (array, username) => {
   for (let i = 0; i < array.length; i += 1) {
@@ -46,6 +43,8 @@ router.get('/', (request, response) => {
 });
 
 router.get('/:ride_id', (req, res) => {
+  console.log('/get_ride');
+  console.log(req);
   Ride.findById(req.params.ride_id, (err, ride) => {
     if (err) res.status(500);
     if (!ride) res.status(404);
@@ -210,17 +209,17 @@ router.get('/user/:user', (req, res) => {
  */
 router.post('/', (req, res) => {
   console.log(req.body);
-  console.log(req);
-  User.findOne({ username: req.userData.user }, (err, user) => {
+  User.findOne({ username: req.body.username }, (err, user) => {
     if (err) res.status(500).send();
     if (!user) res.status(404).send();
 
-      console.log(req.body.number_riders);
+    console.log(req.body);
+
     Ride.create({
-      departing_datetime: req.body.departing_datetime,
-      arriving_at: req.body.arriving_at,
-      departing_from: req.body.departing_from,
-      number_riders: req.body.number_riders,
+      departing_datetime: req.body.ride.departing_datetime,
+      arriving_at: req.body.ride.arriving_at,
+      departing_from: req.body.ride.departing_from,
+      number_riders: req.body.ride.number_riders,
       riders: [user._id],
     }, (err, ride) => {
       if (err) return res.status(500).send();
@@ -233,7 +232,9 @@ router.post('/', (req, res) => {
  * Post a user to a ride.
  */
 router.post('/:ride_id/book', (req, res) => {
-  User.findOne({ username: req.userData.user }, (err, user) => {
+  console.log('/book');
+  console.log('REQ:', req);
+  User.findOne({ username: req.body.username }, (err, user) => {
     if (err) {
       // console.log("500 error for finding user: " + err)
       res.status(500).send();

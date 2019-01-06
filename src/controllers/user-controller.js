@@ -10,11 +10,9 @@ const authMiddleWare = require('../middleware/auth-middleware');
 
 router.use(bodyParser.json());
 
-// if (process.env.NODE_ENV !== 'test') {
-//   router.use(authMiddleWare);
-// }
-router.use(authMiddleWare);
-
+if (process.env.NODE_ENV !== 'test') {
+  router.use(authMiddleWare);
+}
 
 router.get('/:username', (req, res) => {
   User.findOne({ username: req.params.username }, (err, user) => {
