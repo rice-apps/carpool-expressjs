@@ -8,6 +8,8 @@ const Ride = require('../models/ride');
 const User = require('../models/user');
 const authMiddleWare = require('../middleware/auth-middleware');
 
+const nodemailer = require('nodemailer');
+
 router.use(bodyParser.json());
 
 if (process.env.NODE_ENV !== 'test') {
@@ -85,6 +87,56 @@ router.get('/past/all/', (req, res) => {
  */
 
 router.get('/past/user/:user', (req, res) => {
+
+
+  console.log("About to send email??");
+
+  async function main(){
+
+    // create reusable transporter object using the default SMTP transport
+    let smtpTransport = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        type: 'OAuth2',
+        user: 'carpool.riceapps@gmail.com', // generated ethereal user
+        clientId: '859237922889-smeosvsfknkhm31sirfdt0afnspc4s64.apps.googleusercontent.com',
+        clientSecret: 'aGISyb3daSQF1HFVqKFe5Nho',
+        refreshToken: '1/o1N0caKIPFpdy02pn0qxgwcmpV9KbUyOEL9Jox7RmQQ',
+        accessToken: 'ya29.GludBu475Z82VtLhBWgQNgkIPbVG27l1VrOeFrcrA8Cz1TWuraNc24Q2nAx2GedXezdP0qEJVF2Zw_87hHNsGlra8dJSWjEV9MfOjuOouX4Ly2k1RtENNHaTyU0v'
+      }
+    });
+
+    console.log("smtpTransport created: " + smtpTransport);
+
+   let mailOptions = {
+      from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
+      to: 'alh9@rice.edu, jpg7@rice.edu, hwangangela99@hotmail.com, josie.garza789@gmail.com', // list of receivers
+      subject: 'Subject', // Subject line
+      //text: "Hello world ✔", // plaintext body
+      html: "<b>If this sends, I would be so happy :)</b>" // html body
+    };
+
+    console.log("mailOptions: " + mailOptions);
+
+    // send mail with defined transport object
+    let info = await smtpTransport.sendMail(mailOptions);
+
+    console.log("Message sent: %s", info.messageId);
+    // Preview only available when sending through an Ethereal account
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+
+  }
+
+  main().catch(console.error);
+
+
+
+
+
+
+
   const currentTime = new Date().getTime();
 
   User.find({ username: req.params.user }, (err, user) => {
@@ -336,6 +388,10 @@ router.delete('/:ride_id', (req, res) => {
     ride.status(200).send(ride);
   });
 });
+
+
+
+
 
 
 module.exports = router;
