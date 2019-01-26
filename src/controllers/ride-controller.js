@@ -88,55 +88,6 @@ router.get('/past/all/', (req, res) => {
 
 router.get('/past/user/:user', (req, res) => {
 
-
-  console.log("About to send email??");
-
-  async function main(){
-
-    // create reusable transporter object using the default SMTP transport
-    let smtpTransport = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // true for 465, false for other ports
-      auth: {
-        type: 'OAuth2',
-        user: 'carpool.riceapps@gmail.com', // generated ethereal user
-        clientId: '859237922889-smeosvsfknkhm31sirfdt0afnspc4s64.apps.googleusercontent.com',
-        clientSecret: 'aGISyb3daSQF1HFVqKFe5Nho',
-        refreshToken: '1/o1N0caKIPFpdy02pn0qxgwcmpV9KbUyOEL9Jox7RmQQ',
-        accessToken: 'ya29.GludBu475Z82VtLhBWgQNgkIPbVG27l1VrOeFrcrA8Cz1TWuraNc24Q2nAx2GedXezdP0qEJVF2Zw_87hHNsGlra8dJSWjEV9MfOjuOouX4Ly2k1RtENNHaTyU0v'
-      }
-    });
-
-    console.log("smtpTransport created: " + smtpTransport);
-
-   let mailOptions = {
-      from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
-      to: 'alh9@rice.edu, jpg7@rice.edu, hwangangela99@hotmail.com, josie.garza789@gmail.com', // list of receivers
-      subject: 'Subject', // Subject line
-      //text: "Hello world ✔", // plaintext body
-      html: "<b>If this sends, I would be so happy :)</b>" // html body
-    };
-
-    console.log("mailOptions: " + mailOptions);
-
-    // send mail with defined transport object
-    let info = await smtpTransport.sendMail(mailOptions);
-
-    console.log("Message sent: %s", info.messageId);
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-
-  }
-
-  main().catch(console.error);
-
-
-
-
-
-
-
   const currentTime = new Date().getTime();
 
   User.find({ username: req.params.user }, (err, user) => {
@@ -280,6 +231,60 @@ router.post('/', (req, res) => {
   });
 });
 
+function sendNewRiderEmail(ride, rider) {
+
+  var departingFrom = ride.departing_from;
+  var arrivingAt = ride.arriving_at;
+  var date = ride.departing_datetime;
+  var riderString = '';
+  var newRider = '';
+  if (!rider.first_name)
+    newRider = rider.username;
+  else newRider = rider.first_name + " " + rider.last_name;
+  var i;
+  for (i = 0; i < ride.riders.length; i ++)
+    riderString += ride.riders[i].email + ', ';
+
+  async function main(){
+
+    // create reusable transporter object using the default SMTP transport
+    let smtpTransport = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        type: 'OAuth2',
+        user: 'carpool.riceapps@gmail.com', // generated ethereal user
+        clientId: '859237922889-smeosvsfknkhm31sirfdt0afnspc4s64.apps.googleusercontent.com',
+        clientSecret: 'aGISyb3daSQF1HFVqKFe5Nho',
+        refreshToken: '1/o1N0caKIPFpdy02pn0qxgwcmpV9KbUyOEL9Jox7RmQQ',
+        accessToken: 'ya29.GludBu475Z82VtLhBWgQNgkIPbVG27l1VrOeFrcrA8Cz1TWuraNc24Q2nAx2GedXezdP0qEJVF2Zw_87hHNsGlra8dJSWjEV9MfOjuOouX4Ly2k1RtENNHaTyU0v'
+      }
+    });
+
+    let mailOptions = {
+      from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
+      to: riderString, // list of receivers
+      subject: 'User ' + newRider + ' has joined your ride!', // Subject line
+      //text: "Hello world ✔", // plaintext body
+      html: '<p>User ' + newRider + ' has joined your ride. </p>' +
+        '<p>Departing from: ' + departingFrom + '</p>' +
+        '<p>Arriving at: ' + arrivingAt + '</p>' +
+        '<p>Depature time: ' + date + '</p>'
+    };
+
+    // send mail with defined transport object
+    let info = await smtpTransport.sendMail(mailOptions);
+
+    console.log("Message sent: %s", info.messageId);
+    // Preview only available when sending through an Ethereal account
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+
+  }
+
+  main().catch(console.error);
+}
+
 /**
  * Post a user to a ride.
  */
@@ -311,6 +316,9 @@ router.post('/:ride_id/book', (req, res) => {
             console.log(`500 error for saving ride: ${err}`);
             res.status(500).send();
           }
+
+          // send email
+          sendNewRiderEmail(newRide, user);
           res.status(200).send(newRide);
         });
       }
