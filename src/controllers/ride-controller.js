@@ -231,19 +231,54 @@ router.post('/', (req, res) => {
   });
 });
 
-function sendNewRiderEmail(ride, rider) {
+function sendEmailConfirmation(ride, rider, joinedRide, leftRide) {
 
   var departingFrom = ride.departing_from;
   var arrivingAt = ride.arriving_at;
   var date = ride.departing_datetime;
-  var riderString = '';
+  var emailString = '';
+  var riderString = '<h4>Riders (' + ride.riders.length + ')</h4><ul>'
   var newRider = '';
   if (!rider.first_name)
     newRider = rider.username;
   else newRider = rider.first_name + " " + rider.last_name;
   var i;
-  for (i = 0; i < ride.riders.length; i ++)
-    riderString += ride.riders[i].email + ', ';
+
+  for (i = 0; i < ride.riders.length; i++) {
+    var temp = ride.riders[i];
+
+    // if the user is joining a ride, make sure they don't get 2 emails.
+    if (temp.username !== rider.username)
+      emailString += temp.email + ', ';
+
+    // Use the full name of the rider for riders list, or the rider's username if not available.
+    if (!temp.first_name)
+      riderString += '<li>' + temp.username + '</li>';
+    else riderString += '<li>' + temp.first_name + ' ' + temp.last_name + '</li>';
+  }
+
+  riderString += '</ul>';
+
+
+  // Use the flags to determine which type of message to send.
+  var subject;
+  var message;
+  var personalSubject;
+  var personalMessage;
+
+  if (joinedRide) {
+    subject = 'User ' + newRider + ' has joined your ride!';
+    message = '<p>User ' + newRider + ' has joined your ride. </p>';
+    personalSubject = 'You have joined a ride!';
+    personalMessage = 'Yay! You have joined a ride.';
+  }
+
+  if (leftRide) {
+    subject = 'User ' + newRider + ' has left your ride!';
+    message = '<p>User ' + newRider + ' has left your ride. </p>';
+    personalSubject = 'You have left a ride.';
+    personalMessage = "You have left a ride. The ride's information is as follows: ";
+  }
 
   async function main(){
 
@@ -262,23 +297,36 @@ function sendNewRiderEmail(ride, rider) {
       }
     });
 
+    // To all the riders on the ride
     let mailOptions = {
       from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
-      to: riderString, // list of receivers
-      subject: 'User ' + newRider + ' has joined your ride!', // Subject line
-      //text: "Hello world ✔", // plaintext body
-      html: '<p>User ' + newRider + ' has joined your ride. </p>' +
+      to: emailString, // list of receivers
+      subject: subject, // Subject line
+      html: message +
         '<p>Departing from: ' + departingFrom + '</p>' +
         '<p>Arriving at: ' + arrivingAt + '</p>' +
-        '<p>Depature time: ' + date + '</p>'
+        '<p>Depature time: ' + date + '</p>' +
+        riderString
     };
 
+    // To the user.
+    let mailOptions2 = {
+      from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
+      to: rider.email, // list of receivers
+      subject: personalSubject, // Subject line
+      html: personalMessage +
+        '<p>Departing from: ' + departingFrom + '</p>' +
+        '<p>Arriving at: ' + arrivingAt + '</p>' +
+        '<p>Depature time: ' + date + '</p>' +
+        riderString
+    };
+
+    let info2 = await smtpTransport.sendMail(mailOptions2);
     // send mail with defined transport object
     let info = await smtpTransport.sendMail(mailOptions);
 
     console.log("Message sent: %s", info.messageId);
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    console.log("Message sent to rider: %s", info2.messageId);
 
   }
 
@@ -318,7 +366,7 @@ router.post('/:ride_id/book', (req, res) => {
           }
 
           // send email
-          sendNewRiderEmail(newRide, user);
+          sendEmailConfirmation(newRide, user, true, false);
           res.status(200).send(newRide);
         });
       }
@@ -362,7 +410,19 @@ router.delete('/:ride_id/:user_id', (req, res) => {
       // Write the changes to the database
       ride.save((err) => {
         if (err) return res.status(500).send();
+
+        User.findOne({ username: req.params.user_id }, (err, user) => {
+          if (err) {
+            // console.log("500 error for finding user: " + err)
+            res.status(500).send();
+          }
+          if (!user) res.status(404).send();
+
+          sendEmailConfirmation(ride, user, false, true);
+        });
+
         return res.status(200).send(ride);
+
       });
     } else {
       return res.status(404).send('User does not exist on ride!');
