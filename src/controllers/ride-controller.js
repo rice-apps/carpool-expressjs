@@ -231,7 +231,8 @@ router.post('/', (req, res) => {
   });
 });
 
-function sendEmailConfirmation(ride, rider, joinedRide, leftRide) {
+
+function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, leftRide) {
 
   var departingFrom = ride.departing_from;
   var arrivingAt = ride.arriving_at;
@@ -239,11 +240,13 @@ function sendEmailConfirmation(ride, rider, joinedRide, leftRide) {
   var emailString = '';
   var riderString = '<h4>Riders (' + ride.riders.length + ')</h4><ul>'
   var newRider = '';
+
   if (!rider.first_name)
     newRider = rider.username;
-  else newRider = rider.first_name + " " + rider.last_name;
-  var i;
 
+  else newRider = rider.first_name + " " + rider.last_name;
+
+  var i;
   for (i = 0; i < ride.riders.length; i++) {
     var temp = ride.riders[i];
 
@@ -265,19 +268,31 @@ function sendEmailConfirmation(ride, rider, joinedRide, leftRide) {
   var message;
   var personalSubject;
   var personalMessage;
+  var link = '\"localhost:4200/rides/' + ride_id + '\"';
+  var messageBody = '<p>Departing from: ' + departingFrom + '</p>' +
+                    '<p>Arriving at: ' + arrivingAt + '</p>' +
+                    '<p>Depature time: ' + date + '</p>' +
+                    riderString +
+                    '<br/><p> To view the ride page, <a href = ' + link + '>click here</a>.</p>';
+
+  if (createdRide) {
+    subject = 'You have created a ride!';
+    message = 'You have created ride ' + ride_id;
+    messageBody = "<p>You will be responsible for calling an Uber/Lyft for this ride to happen. The ride's information is as follows.</p>" + messageBody;
+  }
 
   if (joinedRide) {
     subject = 'User ' + newRider + ' has joined your ride!';
     message = '<p>User ' + newRider + ' has joined your ride. </p>';
-    personalSubject = 'You have joined a ride!';
-    personalMessage = 'Yay! You have joined a ride.';
+    personalSubject = 'You have joined ride ' + ride_id + '!';
+    personalMessage = 'Yay! You have joined ride ' + ride_id + '.';
   }
 
   if (leftRide) {
     subject = 'User ' + newRider + ' has left your ride!';
     message = '<p>User ' + newRider + ' has left your ride. </p>';
-    personalSubject = 'You have left a ride.';
-    personalMessage = "You have left a ride. The ride's information is as follows: ";
+    personalSubject = 'You have left ride ' + ride_id + '!';
+    personalMessage = "You have left ride " + ride_id + ". The ride's information is as follows: ";
   }
 
   async function main(){
@@ -298,34 +313,31 @@ function sendEmailConfirmation(ride, rider, joinedRide, leftRide) {
     });
 
     // To all the riders on the ride
-    let mailOptions = {
-      from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
-      to: emailString, // list of receivers
-      subject: subject, // Subject line
-      html: message +
-        '<p>Departing from: ' + departingFrom + '</p>' +
-        '<p>Arriving at: ' + arrivingAt + '</p>' +
-        '<p>Depature time: ' + date + '</p>' +
-        riderString
-    };
+    if (! createdRide)
+    {
+
+      let mailOptions = {
+        from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
+        to: emailString, // list of receivers
+        subject: subject, // Subject line
+        html: message + messageBody
+      };
+
+      let info = await smtpTransport.sendMail(mailOptions);
+      console.log("Message sent: %s", info.messageId);
+    }
+
 
     // To the user.
     let mailOptions2 = {
       from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
       to: rider.email, // list of receivers
       subject: personalSubject, // Subject line
-      html: personalMessage +
-        '<p>Departing from: ' + departingFrom + '</p>' +
-        '<p>Arriving at: ' + arrivingAt + '</p>' +
-        '<p>Depature time: ' + date + '</p>' +
-        riderString
+      html: personalMessage + messageBody
     };
 
-    let info2 = await smtpTransport.sendMail(mailOptions2);
     // send mail with defined transport object
-    let info = await smtpTransport.sendMail(mailOptions);
-
-    console.log("Message sent: %s", info.messageId);
+    let info2 = await smtpTransport.sendMail(mailOptions2);
     console.log("Message sent to rider: %s", info2.messageId);
 
   }
@@ -338,7 +350,7 @@ function sendEmailConfirmation(ride, rider, joinedRide, leftRide) {
  */
 router.post('/:ride_id/book', (req, res) => {
   console.log('/book');
-  console.log('REQ:', req);
+
   User.findOne({ username: req.body.username }, (err, user) => {
     if (err) {
       // console.log("500 error for finding user: " + err)
@@ -366,7 +378,7 @@ router.post('/:ride_id/book', (req, res) => {
           }
 
           // send email
-          sendEmailConfirmation(newRide, user, true, false);
+          sendEmailConfirmation(req.params.ride_id, newRide, user, false,true, false);
           res.status(200).send(newRide);
         });
       }
@@ -418,7 +430,7 @@ router.delete('/:ride_id/:user_id', (req, res) => {
           }
           if (!user) res.status(404).send();
 
-          sendEmailConfirmation(ride, user, false, true);
+          sendEmailConfirmation(req.params.ride_id, ride, user, false, false, true);
         });
 
         return res.status(200).send(ride);
