@@ -14,27 +14,31 @@ if (process.env.NODE_ENV !== 'test') {
   router.use(authMiddleWare);
 }
 
-router.get('/:username', (req, res) => {
-  User.findOne({ username: req.params.username }, (err, user) => {
-    if (err) return res.status(500);
-    if (!res || user === null) return res.status(404).send('404');
+/**
+ * Find a user by ID.
+ */
+router.get('/:user_id', (req, res) => {
+  User.findById(req.params.user_id, (err, user) => {
+    if (err) return res.status(500).send('Internal Error');
+    if (!user) return res.status(404).send('Could not find user by ID.');
+    console.log('Found user with profile:', user);
     return res.status(200).send(user);
   });
 });
 
-router.get('/checked/:username', (req, res) => {
-  if (req.userData.user !== req.params.username) {
-    return res.status(401).send();
-  }
-
-  User.findOne({ username: req.params.username }, (err, user) => {
-    if (err) return res.status(500);
-    if (!res || user === null) return res.status(404).send('404');
-    return res.status(200).send(user);
-  });
-
-  return 0;
-});
+// router.get('/checked/:username', (req, res) => {
+//   if (req.userData.user !== req.params.username) {
+//     return res.status(401).send();
+//   }
+//
+//   User.findOne({ username: req.params.username }, (err, user) => {
+//     if (err) return res.status(500);
+//     if (!res || user === null) return res.status(404).send('404');
+//     return res.status(200).send(user);
+//   });
+//
+//   return 0;
+// });
 
 router.post('/', (req, res) => {
   User.findOne({ username: req.query.username }, (err, user) => {
@@ -70,22 +74,24 @@ router.delete('/:username', (req, res) => {
   });
 });
 
-router.put('/:username/edit', (req, res) => {
-  User.findOne({ username: req.params.username }, (err, user) => {
-    if (req.userData.user !== req.params.username) {
-      return res.status(401).send();
-    }
-
-    if (err) return res.status(500).send();
-    if (!user) return res.status(404).send();
+/**
+ * Edit a user's profile based on their ID.
+ */
+router.put('/:user_id/edit', (req, res) => {
+  User.findById(req.params.user_id, (err, user) => {
+    if (err) return res.status(500).send('Internal Error');
+    if (!user) return res.status(404).send('Could not find user by ID.');
 
     // Extend the user (copies values from req.body onto user) and save it if req is sent by a valid user.
     if (!(Object.keys(req.body).every(prop => User.schema.paths.hasOwnProperty(prop)))) {
-      return res.status(400).send('Given object does not match db format');
+      return res.status(400).send('Given object does not match DB format.');
     }
+
     user = _.extend(user, req.body);
-    user.save((err, user) => {
-      if (err) return res.status(500).send();
+    console.log('Updating user with new profile:', user);
+    user.save((saveErr, savedUser) => {
+      if (err) return res.status(500).send('Internal Error');
+      if (!savedUser) return res.status(404).send('Could not save new user profile.');
       return res.status(200).send(user);
     });
   });

@@ -45,34 +45,37 @@ router.get('/', function (req, res) {
           var token = jwt.sign({data: authSucceded}, config.secret);
 
           // see if this netID exists as a user already. if not, create one.
-          let newUserCheck = false;
           User.findOne({username: authSucceded.user}, function (err, user) {
+            let newUserCheck = false;
+            let userId = null;
             if (err) return res.status(500).send();
+
             if (!user) {
               User.create({
                 username: authSucceded.user,
                 email: authSucceded.user + '@rice.edu'
               }, function (err, newUser) {
                 if (err) return res.status(500).send();
-
                 newUserCheck = true;
+                userId = newUser._id;
               });
               newUserCheck = true;
-
             }
-          });
+            console.log(user);
+            userId = user._id;
 
-          // send our token to the frontend! now, whenever the user tries to access a resource, we check their
-          // token by verifying it and seeing if the payload (the username) allows this user to access
-          // the requested resource.
-          res.json({
-            success: true,
-            message: 'CAS authentication success',
-            isNew: newUserCheck,
-            user: {
-              username: authSucceded.user,
-              token: token
-            }
+            // send our token to the frontend! now, whenever the user tries to access a resource, we check their
+            // token by verifying it and seeing if the payload (the username) allows this user to access
+            // the requested resource.
+            res.json({
+              success: true,
+              message: 'CAS authentication success',
+              isNew: newUserCheck,
+              user: {
+                _id: userId,
+                token: token
+              }
+            });
           });
 
         } else if (serviceResponse.authenticationFailure) {
