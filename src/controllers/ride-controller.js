@@ -42,9 +42,10 @@ router.get('/', (request, response) => {
   });
 });
 
+/**
+ * Get a single ride
+ */
 router.get('/:ride_id', (req, res) => {
-  console.log('/get_ride');
-  console.log(req);
   Ride.findById(req.params.ride_id, (err, ride) => {
     if (err) res.status(500);
     if (!ride) res.status(404);
@@ -52,17 +53,9 @@ router.get('/:ride_id', (req, res) => {
   });
 });
 
-function pastrides(callback) {
-  const currentTime = Date.now();
-  Ride.find({ departing_datetime: { $lt: currentTime } }, (err, rides) => {
-    callback(err, rides);
-  });
-}
-
-/*
-  Get all past rides.
-*/
-
+/**
+ * Get all past rides
+ */
 router.get('/past/all/', (req, res) => {
   // TODO: figure out query & comparison time
 
@@ -80,16 +73,38 @@ router.get('/past/all/', (req, res) => {
   });
 });
 
-/*
-    Get all past rides for a specific user
+/**
+ * Helper function to get past rides
+ * @param callback
  */
+function pastrides(callback) {
+  const currentTime = Date.now();
+  Ride.find({ departing_datetime: { $lt: currentTime } }, (err, rides) => {
+    callback(err, rides);
+  });
+}
 
-router.get('/past/user/:user', (req, res) => {
+/**
+ * Get all past rides for a specific user.
+ */
+router.get('/past/user/:user_id', (req, res) => {
   const currentTime = new Date().getTime();
 
-  User.find({ username: req.params.user }, (err, user) => {
+  console.log(`Getting all past rides for user ${req.params.user_id}`);
+
+  if (req.params.user_id === 'null' || req.params.user_id === 'undefined') {
+    console.log('Invalid user_id format');
+    return res.status(404).send('Invalid user_id format');
+  }
+
+  User.findById(req.params.user_id, (err, user) => {
     if (err) {
+      console.log(err);
       return res.status(500); // db error (500 internal server error)
+    }
+    if (!user) {
+      console.log(`Could not find user with id ${req.params.user_id}`);
+      return res.status(404).send('Could not find user by ID.');
     }
 
     // currentuser is an ARRAY containing one element - the user object.
@@ -100,7 +115,6 @@ router.get('/past/user/:user', (req, res) => {
     const query = { $and: [{ riders: { $all: currentuser } }, { departing_datetime: { $lt: currentTime } }] };
 
     Ride.find(query, (err, rides) => {
-      console.log('Rides', rides);
 
       if (err) {
         return res.status(500); // db error (500 internal server error)
@@ -113,17 +127,9 @@ router.get('/past/user/:user', (req, res) => {
   });
 });
 
-function futurerides(callback) {
-  const currentTime = Date.now();
-  Ride.find({ departing_datetime: { $gte: currentTime } }, (err, rides) => {
-    callback(err, rides);
-  });
-}
-
-/*
-  Get all rides occurring in the future.
-*/
-
+/**
+ * Get all rides occurring in the future
+ */
 router.get('/future/all/', (req, res) => {
   // TODO: figure out query & comparison time
 
@@ -138,15 +144,38 @@ router.get('/future/all/', (req, res) => {
   });
 });
 
-/*
-    Get all future rides for a specific user.
+/**
+ * Get all future rides
+ * @param callback
  */
-router.get('/future/user/:user', (req, res) => {
+function futurerides(callback) {
+  const currentTime = Date.now();
+  Ride.find({ departing_datetime: { $gte: currentTime } }, (err, rides) => {
+    callback(err, rides);
+  });
+}
+
+/**
+ * Get all future rides for a specific user
+ */
+router.get('/future/user/:user_id', (req, res) => {
   const currentTime = new Date().getTime();
 
-  User.find({ username: req.params.user }, (err, user) => {
+  console.log(`Getting all future rides for user ${req.params.user_id}`);
+
+  if (req.params.user_id === 'null' || req.params.user_id === 'undefined') {
+    console.log('Invalid user_id format');
+    return res.status(404).send('Invalid user_id format');
+  }
+
+  User.findById(req.params.user_id, (err, user) => {
     if (err) {
+      console.log(err);
       return res.status(500); // db error (500 internal server error)
+    }
+    if (!user) {
+      console.log(`Could not find user with id ${req.params.user_id}`);
+      return res.status(404).send('Could not find user by ID.');
     }
 
     // currentuser is an ARRAY containing one element - the user object.
@@ -157,8 +186,6 @@ router.get('/future/user/:user', (req, res) => {
     const query = { $and: [{ riders: { $all: currentuser } }, { departing_datetime: { $gte: currentTime } }] };
 
     Ride.find(query, (err, rides) => {
-      console.log('Rides', rides);
-
       if (err) {
         return res.status(500); // db error (500 internal server error)
       }
@@ -170,10 +197,9 @@ router.get('/future/user/:user', (req, res) => {
   });
 });
 
-/*
-  Get all rides containing the user.
-*/
-
+/**
+ * Get all rides containing the user
+ */
 router.get('/user/:user', (req, res) => {
   const currentTime = new Date().getTime();
 
@@ -203,17 +229,26 @@ router.get('/user/:user', (req, res) => {
   });
 });
 
-
 /**
  * Post a single ride.
  */
 router.post('/', (req, res) => {
-  console.log(req.body);
-  User.findOne({ username: req.body.username }, (err, user) => {
-    if (err) res.status(500).send();
-    if (!user) res.status(404).send();
+  console.log(`Creating a new ride with user ${req.body.user_id}`);
 
-    console.log(req.body);
+  if (req.params.user_id === 'null' || req.params.user_id === 'undefined') {
+    console.log('Invalid user_id format');
+    return res.status(404).send('Invalid user_id format');
+  }
+
+  User.findById(req.body.user_id, (err, user) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send();
+    }
+    if (!user) {
+      console.log(`Could not find user with id ${req.body.user_id}`);
+      return res.status(404).send('Could not find user by ID.');
+    }
 
     Ride.create({
       departing_datetime: req.body.ride.departing_datetime,
@@ -232,34 +267,52 @@ router.post('/', (req, res) => {
  * Post a user to a ride.
  */
 router.post('/:ride_id/book', (req, res) => {
-  console.log('/book');
-  console.log('REQ:', req);
-  User.findOne({ username: req.body.username }, (err, user) => {
+  console.log(`Posting user with id ${req.body.user_id} to ride with id ${req.params.ride_id}`);
+
+  if (req.params.user_id === 'null' || req.params.user_id === 'undefined') {
+    console.log('Invalid user_id format');
+    return res.status(404).send('Invalid user_id format');
+  }
+
+  if (!req.body.user_id) {
+    console.log('A user id was not provided');
+    return res.status(404).send('A user must be provided.');
+  }
+
+  User.findById(req.body.user_id, (err, user) => {
     if (err) {
-      // console.log("500 error for finding user: " + err)
-      res.status(500).send();
+      console.log(err);
+      return res.status(500).send('Internal Error');
     }
-    if (!user) res.status(404).send();
-    Ride.findById(req.params.ride_id, (err, ride) => {
-      if (err) {
-        // console.log("500 error for finding ride: " + err)
-        res.status(500).send();
+    if (!user) {
+      console.log(`Could not find user with id ${req.body.user_id}`);
+      return res.status(404).send('Could not find user by ID.');
+    }
+
+    Ride.findById(req.params.ride_id, (rideErr, ride) => {
+      if (rideErr) {
+        console.log(rideErr);
+        return res.status(500).send('Internal Error');
       }
-      if (includes(ride.riders, user.username)) {
-        res.status(403).send('User exists on ride');
+      if (!ride) {
+        console.log(`Could not find ride with id ${req.params.ride_id}`);
+        return res.status(404).send('Could not find ride by ID');
+      }
+
+      console.log(ride.riders);
+      if (includes(ride.riders, user._id)) {
+        console.log('User already exists on ride');
+        return res.status(403).send('User exists on ride');
       } else {
-        // console.log("this is what riders look like: "+ride.riders)
-        // console.log("this is what the new rider look like: " + user)
         ride.riders.push(user);
-        // console.log("this is what new riders look like:" + ride.riders)
         const newRiders = ride.riders;
         ride.set({ riders: newRiders });
-        ride.save((err, newRide) => {
-          if (err) {
-            console.log(`500 error for saving ride: ${err}`);
-            res.status(500).send();
+        ride.save((saveErr, newRide) => {
+          if (saveErr) {
+            console.log(saveErr);
+            return res.status(500).send('Error saving user into ride');
           }
-          res.status(200).send(newRide);
+          return res.status(200).send(newRide);
         });
       }
     });
@@ -270,15 +323,24 @@ router.post('/:ride_id/book', (req, res) => {
  * Delete a user from a ride.
  */
 router.delete('/:ride_id/:user_id', (req, res) => {
-  // if (req.userData.user === req.params.user_id) {
+  if (req.params.user_id === 'null' || req.params.user_id === 'undefined') {
+    console.log('Invalid user_id format');
+    return res.status(404).send('Invalid user_id format');
+  }
 
   // Get the ride
   Ride.findById(req.params.ride_id, (err, ride) => {
-    if (err) res.status(500).send();
-    // console.log("ride:", ride);
+    if (err) {
+      console.log(err);
+      res.status(500).send('Internal Error');
+    }
+    if (!ride) {
+      console.log(`Could not find ride with id ${req.params.ride_id}`);
+      return res.status(404).send('Could not find ride by ID');
+    }
 
-    // If this ride is already empty - delete it
-    if (ride.riders && ride.riders.length === 0) {
+    // If this ride is already empty - delete it. It should not be in this kind of state.
+    if (ride.riders && !ride.riders.length) {
       deleteRide(req.params.ride_id, (err, res) => {
         if (err) { return res.status(500).send(); }
         console.log('ride ', req.params.ride_id, ' was already empty and successfully deleted');
@@ -286,9 +348,12 @@ router.delete('/:ride_id/:user_id', (req, res) => {
     }
 
     // Check if the user is part of this ride
-    if (ride.riders.some(r => r.username === req.params.user_id)) {
-      // Remove the user from this ride
-      ride.riders = ride.riders.filter(ele => ele.username !== req.params.user_id);
+    // Remove the user from this ride
+    console.log(req.params.user_id);
+    console.log(ride.riders);
+    if (ride.riders.some(r => r._id.toString() === req.params.user_id.toString())) {
+
+      ride.riders = ride.riders.filter(ele => ele._id.toString() !== req.params.user_id.toString());
       console.log('removed user id ', req.params.user_id, 'from ride', req.params.ride_id);
 
       // If this ride has no users - delete it
@@ -300,30 +365,16 @@ router.delete('/:ride_id/:user_id', (req, res) => {
       }
 
       // Write the changes to the database
-      ride.save((err) => {
-        if (err) return res.status(500).send();
+      ride.save((saveErr) => {
+        if (saveErr) return res.status(500).send();
         return res.status(200).send(ride);
       });
     } else {
+      console.log('User does not exist on this ride!');
       return res.status(404).send('User does not exist on ride!');
     }
   });
-  // }
-  // else {
-  //   return res.status(403).send();
-  // }
-  // }
 });
-
-/**
- * Delete a ride
- */
-function deleteRide(ride_id, callback) {
-  const myquery = { _id: ride_id };
-  Ride.deleteOne(myquery, (err, ride) => {
-    callback(err, ride);
-  });
-}
 
 /**
  * Endpoint Delete a ride.
@@ -337,5 +388,14 @@ router.delete('/:ride_id', (req, res) => {
   });
 });
 
+/**
+ * Delete a ride
+ */
+function deleteRide(ride_id, callback) {
+  const myquery = { _id: ride_id };
+  Ride.deleteOne(myquery, (err, ride) => {
+    callback(err, ride);
+  });
+}
 
 module.exports = router;

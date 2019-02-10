@@ -48,7 +48,10 @@ router.get('/', function (req, res) {
           User.findOne({username: authSucceded.user}, function (err, user) {
             let newUserCheck = false;
             let userId = null;
-            if (err) return res.status(500).send();
+            if (err) {
+              console.log(err);
+              return res.status(500).send('Internal Error');
+            }
 
             if (!user) {
               User.create({
@@ -56,13 +59,15 @@ router.get('/', function (req, res) {
                 email: authSucceded.user + '@rice.edu'
               }, function (err, newUser) {
                 if (err) return res.status(500).send();
+                console.log('new user', newUser);
                 newUserCheck = true;
                 userId = newUser._id;
               });
               newUserCheck = true;
+            } else {
+              userId = user._id;
             }
-            console.log(user);
-            userId = user._id;
+            console.log("new user id", userId);
 
             // send our token to the frontend! now, whenever the user tries to access a resource, we check their
             // token by verifying it and seeing if the payload (the username) allows this user to access
@@ -76,6 +81,7 @@ router.get('/', function (req, res) {
                 token: token
               }
             });
+            return res.status(200);
           });
 
         } else if (serviceResponse.authenticationFailure) {
