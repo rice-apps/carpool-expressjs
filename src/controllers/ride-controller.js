@@ -43,8 +43,8 @@ router.get('/', (request, response) => {
 });
 
 router.get('/:ride_id', (req, res) => {
-  //console.log('/get_ride');
-  //console.log(req);
+  console.log('/get_ride');
+  console.log(req);
   Ride.findById(req.params.ride_id, (err, ride) => {
     if (err) res.status(500);
     if (!ride) res.status(404);
@@ -100,7 +100,7 @@ router.get('/past/user/:user', (req, res) => {
     const query = { $and: [{ riders: { $all: currentuser } }, { departing_datetime: { $lt: currentTime } }] };
 
     Ride.find(query, (err, rides) => {
-      //console.log('Rides', rides);
+      console.log('Rides', rides);
 
       if (err) {
         return res.status(500); // db error (500 internal server error)
@@ -157,7 +157,7 @@ router.get('/future/user/:user', (req, res) => {
     const query = { $and: [{ riders: { $all: currentuser } }, { departing_datetime: { $gte: currentTime } }] };
 
     Ride.find(query, (err, rides) => {
-      //console.log('Rides', rides);
+      console.log('Rides', rides);
 
       if (err) {
         return res.status(500); // db error (500 internal server error)
@@ -190,7 +190,7 @@ router.get('/user/:user', (req, res) => {
     const query = { riders: { $all: currentuser } };
 
     Ride.find(query, (err, rides) => {
-      //console.log('Rides', rides);
+      console.log('Rides', rides);
 
       if (err) {
         return res.status(500); // db error (500 internal server error)
