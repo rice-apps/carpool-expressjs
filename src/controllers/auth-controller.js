@@ -20,7 +20,6 @@ router.use(bodyParser.json());
 router.get('/', function (req, res) {
 
   var ticket = req.query.ticket;
-  console.log(req.query);
 
   if (ticket) {
     // validate our ticket against the CAS server
@@ -46,8 +45,8 @@ router.get('/', function (req, res) {
 
           // see if this netID exists as a user already. if not, create one.
           User.findOne({username: authSucceded.user}, function (err, user) {
-            let newUserCheck = false;
-            let userId = null;
+            var newUserCheck = null;
+            var userId = null;
             if (err) {
               console.log(err);
               return res.status(500).send('Internal Error');
@@ -61,10 +60,12 @@ router.get('/', function (req, res) {
                 if (err) return res.status(500).send();
                 console.log('new user', newUser);
                 newUserCheck = true;
+                console.log('new user?',newUserCheck)
                 userId = newUser._id;
               });
               newUserCheck = true;
             } else {
+              newUserCheck = false;
               userId = user._id;
             }
             console.log("new user id", userId);
@@ -95,5 +96,9 @@ router.get('/', function (req, res) {
     return res.status(400);
   }
 });
+
+
+
+
 
 module.exports = router;
