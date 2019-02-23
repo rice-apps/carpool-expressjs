@@ -23,14 +23,17 @@ agenda.start();
 // Job data should include: ride id
 // done() --> asynchronous
 agenda.define('send future email', (job, done) => {
-    createEmailReminderJob();
+   // const {to} = job.attrs.data;
+    console.log('are these the emails? %s', job.attrs.data.to);
+    createEmailReminderJob(job.attrs.data);
     done();
 });
+
 agenda.on('start', job => {
-    console.log('Job %s starting', job.attrs.name);
+    console.log('Job \"%s\" starting with id %s and email %s', job.attrs.name, job.attrs.data.ride_id, job.attrs.data.to);
 });
 agenda.on('complete', job => {
-    console.log(`Job ${job.attrs.name} finished`);
+    //console.log(`Job ${job.attrs.name} finished`);
 });
 agenda.on('success:send future email', job => {
     console.log(`Sent Email Successfully`);
@@ -198,7 +201,8 @@ router.get('/future/user/:user', (req, res) => {
                 return res.status(404); // not found (404 not found)
             }
             console.log("Umm incoming job happening?!");
-            agenda.now("send future email");
+            agenda.schedule('in 1 minute', 'send future email', {ride_id: "RIDE ID", to: ['alh9@rice.edu']});
+            updateJob(1, "hwangangela99@hotmail.com", {ride_id: "RIDE ID", to: ['alh9@rice.edu']}, "in 1 minute");
             res.status(200).send(rides);
         });
     });
@@ -264,8 +268,75 @@ router.post('/', (req, res) => {
     });
 });
 
-function createEmailReminderJob() {
-    console.log("Sending email reminder BABY");
+/**
+ * Updates a the mailing list and timing of a job.
+ * @param add: boolean representing whether the email should be added to the mailing list
+ * @param email: email address string
+ * @param data: data object whose "to" field is to be modified
+ * @param when: time to schedule the future email
+ */
+function updateJob(add, email, data, when) {
+    if (add) {
+        data.to.push(email); // formerly .push(user)... mistake @josie ?
+    } else {
+        data.to.filter(sendtoMe => sendtoMe!=email)
+    }
+    agenda.cancel({ride_id: 'RIDE ID'}, (err, numRemoved) => {
+        if (err) {
+            // console.log("500 error for finding ride: " + err)
+            res.status(500).send();
+        }
+        else {
+            console.log("Number of CANCELLED jobs: " + numRemoved);
+        }
+    });
+
+    agenda.schedule(when, 'send future email', data);
+}
+
+/**
+ *
+ * @param data: Object containing ride ID and list of riders
+ */
+function createEmailReminderJob(data) {
+    var messageBody = '<p>Your ride is in 24 hours.</p>';
+
+    async function main(){
+
+        // create reusable transporter object using the default SMTP transport
+        let smtpTransport = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // true for 465, false for other ports
+            auth: {
+                type: 'OAuth2',
+                user: 'carpool.riceapps@gmail.com', // generated ethereal user
+                clientId: '859237922889-smeosvsfknkhm31sirfdt0afnspc4s64.apps.googleusercontent.com',
+                clientSecret: 'aGISyb3daSQF1HFVqKFe5Nho',
+                refreshToken: '1/o1N0caKIPFpdy02pn0qxgwcmpV9KbUyOEL9Jox7RmQQ',
+                accessToken: 'ya29.GludBu475Z82VtLhBWgQNgkIPbVG27l1VrOeFrcrA8Cz1TWuraNc24Q2nAx2GedXezdP0qEJVF2Zw_87hHNsGlra8dJSWjEV9MfOjuOouX4Ly2k1RtENNHaTyU0v'
+            }
+        });
+
+        var emailString = "";
+        for (var i = 0; i < data.to.length; i ++) {
+            emailString += data.to[i] + ", ";
+        }
+        console.log("Email Receivers: %s", emailString);
+
+        let mailOptions = {
+            from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
+            to: emailString, // list of receivers
+            subject: "Your ride is in 24 hours!", // Subject line
+            html: messageBody
+        };
+
+        let info = await smtpTransport.sendMail(mailOptions);
+        console.log("Message sent: %s", info.messageId);
+
+    }
+
+    main().catch(console.error);
 }
 
 function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, leftRide) {

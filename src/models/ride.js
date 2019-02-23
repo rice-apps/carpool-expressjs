@@ -13,6 +13,9 @@ var RideSchema = new mongoose.Schema({
   owner: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   riders: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
 
+  /* NEW: notes section for personal message from the ride creator */
+  note: String,
+
 
   /* Below are currently unused */
   title: String,
