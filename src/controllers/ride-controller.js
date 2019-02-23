@@ -11,36 +11,7 @@ const authMiddleWare = require('../middleware/auth-middleware');
 const nodemailer = require('nodemailer');
 
 var mongoose = require('mongoose');
-var Agenda = require('agenda');
-const config = require('../config');
-const mongoConnectionString = config.db_uri;
-// printing out config.db_uri: mongodb://carpool2018:carpool2018@ds149353.mlab.com:49353/carpool_dev
-
-//const mongoConnectionString = mongoose.connect('mongodb://127.0.0.1/Carpool',{ useMongoClient: true });
-const agenda = new Agenda({db: {address: mongoConnectionString, collection: 'jobs'}});
-agenda.start();
-
-// Job data should include: ride id
-// done() --> asynchronous
-agenda.define('send future email', (job, done) => {
-   // const {to} = job.attrs.data;
-    console.log('are these the emails? %s', job.attrs.data.to);
-    createEmailReminderJob(job.attrs.data);
-    done();
-});
-
-agenda.on('start', job => {
-    console.log('Job \"%s\" starting with id %s and email %s', job.attrs.name, job.attrs.data.ride_id, job.attrs.data.to);
-});
-agenda.on('complete', job => {
-    //console.log(`Job ${job.attrs.name} finished`);
-});
-agenda.on('success:send future email', job => {
-    console.log(`Sent Email Successfully`);
-});
-agenda.on('fail:send future email', (err, job) => {
-    console.log('Job failed with error: ${err.message}');
-});
+const agenda = require('../agenda');
 
 router.use(bodyParser.json());
 
@@ -268,6 +239,92 @@ router.post('/', (req, res) => {
     });
 });
 
+
+/**
+ * Delete a user from a ride.
+ */
+router.delete('/:ride_id/:user_id', (req, res) => {
+    // if (req.userData.user === req.params.user_id) {
+
+    // Get the ride
+    Ride.findById(req.params.ride_id, (err, ride) => {
+        if (err) res.status(500).send();
+        // console.log("ride:", ride);
+
+        // If this ride is already empty - delete it
+        if (ride.riders && ride.riders.length === 0) {
+            deleteRide(req.params.ride_id, (err, res) => {
+                if (err) { return res.status(500).send(); }
+                console.log('ride ', req.params.ride_id, ' was already empty and successfully deleted');
+            });
+        }
+
+        // Check if the user is part of this ride
+        if (ride.riders.some(r => r.username === req.params.user_id)) {
+            // Remove the user from this ride
+            ride.riders = ride.riders.filter(ele => ele.username !== req.params.user_id);
+            console.log('removed user id ', req.params.user_id, 'from ride', req.params.ride_id);
+
+            // If this ride has no users - delete it
+            if (ride.riders && ride.riders.length === 0) {
+                deleteRide(req.params.ride_id, (err, res) => {
+                    if (err) { return res.status(500).send(); }
+                    console.log('ride ', req.params.ride_id, ' is now empty and successfully deleted');
+                });
+            }
+
+            // Write the changes to the database
+            ride.save((err) => {
+                if (err) return res.status(500).send();
+
+                User.findOne({ username: req.params.user_id }, (err, user) => {
+                    if (err) {
+                        // console.log("500 error for finding user: " + err)
+                        res.status(500).send();
+                    }
+                    if (!user) res.status(404).send();
+
+                    sendEmailConfirmation(req.params.ride_id, ride, user, false, false, true);
+                });
+
+                return res.status(200).send(ride);
+
+            });
+        } else {
+            return res.status(404).send('User does not exist on ride!');
+        }
+    });
+    // }
+    // else {
+    //   return res.status(403).send();
+    // }
+    // }
+});
+
+
+/**
+ * Delete a ride
+ */
+function deleteRide(ride_id, callback) {
+    const myquery = { _id: ride_id };
+    Ride.deleteOne(myquery, (err, ride) => {
+        callback(err, ride);
+    });
+}
+
+
+/**
+ * Endpoint Delete a ride.
+ */
+router.delete('/:ride_id', (req, res) => {
+    console.log('deleting ride ', req.params.ride_id);
+    deleteRide(req.params.ride_id, (err, ride) => {
+        if (err) { return res.status(500).send(); }
+        console.log('ride ', req.params.ride_id, ' was successfully deleted');
+        ride.status(200).send(ride);
+    });
+});
+
 /**
  * Updates a the mailing list and timing of a job.
  * @param add: boolean representing whether the email should be added to the mailing list
@@ -296,50 +353,14 @@ function updateJob(add, email, data, when) {
 }
 
 /**
- *
- * @param data: Object containing ride ID and list of riders
+ * Send an immediate email.
+ * @param ride_id: Ride ID
+ * @param ride: Ride object
+ * @param rider: "Special" rider receiving the personalized message
+ * @param createdRide: Boolean, true if the triggering action was a ride creation
+ * @param joinedRide: Boolean, true if the triggering action was someone joining a ride
+ * @param leftRide: Boolean, true if the triggering action was someone leaving a ride
  */
-function createEmailReminderJob(data) {
-    var messageBody = '<p>Your ride is in 24 hours.</p>';
-
-    async function main(){
-
-        // create reusable transporter object using the default SMTP transport
-        let smtpTransport = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // true for 465, false for other ports
-            auth: {
-                type: 'OAuth2',
-                user: 'carpool.riceapps@gmail.com', // generated ethereal user
-                clientId: '859237922889-smeosvsfknkhm31sirfdt0afnspc4s64.apps.googleusercontent.com',
-                clientSecret: 'aGISyb3daSQF1HFVqKFe5Nho',
-                refreshToken: '1/o1N0caKIPFpdy02pn0qxgwcmpV9KbUyOEL9Jox7RmQQ',
-                accessToken: 'ya29.GludBu475Z82VtLhBWgQNgkIPbVG27l1VrOeFrcrA8Cz1TWuraNc24Q2nAx2GedXezdP0qEJVF2Zw_87hHNsGlra8dJSWjEV9MfOjuOouX4Ly2k1RtENNHaTyU0v'
-            }
-        });
-
-        var emailString = "";
-        for (var i = 0; i < data.to.length; i ++) {
-            emailString += data.to[i] + ", ";
-        }
-        console.log("Email Receivers: %s", emailString);
-
-        let mailOptions = {
-            from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
-            to: emailString, // list of receivers
-            subject: "Your ride is in 24 hours!", // Subject line
-            html: messageBody
-        };
-
-        let info = await smtpTransport.sendMail(mailOptions);
-        console.log("Message sent: %s", info.messageId);
-
-    }
-
-    main().catch(console.error);
-}
-
 function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, leftRide) {
 
     var departingFrom = ride.departing_from;
@@ -494,93 +515,5 @@ router.post('/:ride_id/book', (req, res) => {
         });
     });
 });
-
-/**
- * Delete a user from a ride.
- */
-router.delete('/:ride_id/:user_id', (req, res) => {
-    // if (req.userData.user === req.params.user_id) {
-
-    // Get the ride
-    Ride.findById(req.params.ride_id, (err, ride) => {
-        if (err) res.status(500).send();
-        // console.log("ride:", ride);
-
-        // If this ride is already empty - delete it
-        if (ride.riders && ride.riders.length === 0) {
-            deleteRide(req.params.ride_id, (err, res) => {
-                if (err) { return res.status(500).send(); }
-                console.log('ride ', req.params.ride_id, ' was already empty and successfully deleted');
-            });
-        }
-
-        // Check if the user is part of this ride
-        if (ride.riders.some(r => r.username === req.params.user_id)) {
-            // Remove the user from this ride
-            ride.riders = ride.riders.filter(ele => ele.username !== req.params.user_id);
-            console.log('removed user id ', req.params.user_id, 'from ride', req.params.ride_id);
-
-            // If this ride has no users - delete it
-            if (ride.riders && ride.riders.length === 0) {
-                deleteRide(req.params.ride_id, (err, res) => {
-                    if (err) { return res.status(500).send(); }
-                    console.log('ride ', req.params.ride_id, ' is now empty and successfully deleted');
-                });
-            }
-
-            // Write the changes to the database
-            ride.save((err) => {
-                if (err) return res.status(500).send();
-
-                User.findOne({ username: req.params.user_id }, (err, user) => {
-                    if (err) {
-                        // console.log("500 error for finding user: " + err)
-                        res.status(500).send();
-                    }
-                    if (!user) res.status(404).send();
-
-                    sendEmailConfirmation(req.params.ride_id, ride, user, false, false, true);
-                });
-
-                return res.status(200).send(ride);
-
-            });
-        } else {
-            return res.status(404).send('User does not exist on ride!');
-        }
-    });
-    // }
-    // else {
-    //   return res.status(403).send();
-    // }
-    // }
-});
-
-/**
- * Delete a ride
- */
-function deleteRide(ride_id, callback) {
-    const myquery = { _id: ride_id };
-    Ride.deleteOne(myquery, (err, ride) => {
-        callback(err, ride);
-    });
-}
-
-/**
- * Endpoint Delete a ride.
- */
-router.delete('/:ride_id', (req, res) => {
-    console.log('deleting ride ', req.params.ride_id);
-    deleteRide(req.params.ride_id, (err, ride) => {
-        if (err) { return res.status(500).send(); }
-        console.log('ride ', req.params.ride_id, ' was successfully deleted');
-        ride.status(200).send(ride);
-    });
-});
-
-
-
-
-
 
 module.exports = router;
