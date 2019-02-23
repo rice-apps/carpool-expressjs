@@ -171,9 +171,7 @@ router.get('/future/user/:user', (req, res) => {
             if (!rides) {
                 return res.status(404); // not found (404 not found)
             }
-            console.log("Umm incoming job happening?!");
-            agenda.schedule('in 1 minute', 'send future email', {ride_id: "RIDE ID", to: ['alh9@rice.edu']});
-            updateJob(1, "hwangangela99@hotmail.com", {ride_id: "RIDE ID", to: ['alh9@rice.edu']}, "in 1 minute");
+
             res.status(200).send(rides);
         });
     });
@@ -218,12 +216,10 @@ router.get('/user/:user', (req, res) => {
  * Post a single ride.
  */
 router.post('/', (req, res) => {
-    console.log(req.body);
+
     User.findOne({ username: req.body.username }, (err, user) => {
         if (err) res.status(500).send();
         if (!user) res.status(404).send();
-
-        console.log(req.body);
 
         Ride.create({
             departing_datetime: req.body.ride.departing_datetime,
@@ -233,6 +229,18 @@ router.post('/', (req, res) => {
             riders: [user._id],
         }, (err, ride) => {
             if (err) return res.status(500).send();
+
+            console.log("Ride creation: " + ride);
+
+            var id = ride._id;
+            var ridersStringAry = [user.email];
+
+            // 1 day in milliseconds: 86400000
+            var sendTime = ride.departing_datetime - 86400000;
+            console.log("Ride id: %s and Riders: %s", id, ridersStringAry);
+            agenda.schedule(sendTime, "send future email", {ride_id: id, to: ridersStringAry});
+
+            //updateJob(1, "hwangangela99@hotmail.com", {ride_id: "RIDE ID", to: ['alh9@rice.edu']}, "in 1 minute");
 
             res.status(200).send(ride);
         });
@@ -326,8 +334,50 @@ router.delete('/:ride_id', (req, res) => {
 });
 
 /**
+ * Post a user to a ride.
+ */
+router.post('/:ride_id/book', (req, res) => {
+    console.log('/book');
+
+    User.findOne({ username: req.body.username }, (err, user) => {
+        if (err) {
+            // console.log("500 error for finding user: " + err)
+            res.status(500).send();
+        }
+        if (!user) res.status(404).send();
+        Ride.findById(req.params.ride_id, (err, ride) => {
+            if (err) {
+                // console.log("500 error for finding ride: " + err)
+                res.status(500).send();
+            }
+            if (includes(ride.riders, user.username)) {
+                res.status(403).send('User exists on ride');
+            } else {
+                // console.log("this is what riders look like: "+ride.riders)
+                // console.log("this is what the new rider look like: " + user)
+                ride.riders.push(user);
+                // console.log("this is what new riders look like:" + ride.riders)
+                const newRiders = ride.riders;
+                ride.set({ riders: newRiders });
+                ride.save((err, newRide) => {
+                    if (err) {
+                        console.log(`500 error for saving ride: ${err}`);
+                        res.status(500).send();
+                    }
+
+                    // send email
+                    sendEmailConfirmation(req.params.ride_id, newRide, user, false,true, false);
+                    res.status(200).send(newRide);
+                });
+            }
+        });
+    });
+});
+
+
+/**
  * Updates a the mailing list and timing of a job.
- * @param add: boolean representing whether the email should be added to the mailing list
+ * @param add: boolean representing whether the email should be added/removed to/from the mailing list
  * @param email: email address string
  * @param data: data object whose "to" field is to be modified
  * @param when: time to schedule the future email
@@ -339,7 +389,7 @@ function updateJob(add, email, data, when) {
         data.to.filter(sendtoMe => sendtoMe!=email)
     }
 
-    agenda.cancel({ "data.ride_id" : 'RIDE ID' }, (err, numRemoved) => {
+    agenda.cancel({ "data.ride_id" : data.ride_id }, (err, numRemoved) => {
         if (err) {
             console.log("500 error for finding ride: " + err);
             res.status(500).send();
@@ -473,47 +523,5 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
 
     main().catch(console.error);
 }
-
-/**
- * Post a user to a ride.
- */
-router.post('/:ride_id/book', (req, res) => {
-    console.log('/book');
-
-    User.findOne({ username: req.body.username }, (err, user) => {
-        if (err) {
-            // console.log("500 error for finding user: " + err)
-            res.status(500).send();
-        }
-        if (!user) res.status(404).send();
-        Ride.findById(req.params.ride_id, (err, ride) => {
-            if (err) {
-                // console.log("500 error for finding ride: " + err)
-                res.status(500).send();
-            }
-            if (includes(ride.riders, user.username)) {
-                res.status(403).send('User exists on ride');
-            } else {
-                // console.log("this is what riders look like: "+ride.riders)
-                // console.log("this is what the new rider look like: " + user)
-                ride.riders.push(user);
-                // console.log("this is what new riders look like:" + ride.riders)
-                const newRiders = ride.riders;
-                ride.set({ riders: newRiders });
-                ride.save((err, newRide) => {
-                    if (err) {
-                        console.log(`500 error for saving ride: ${err}`);
-                        res.status(500).send();
-                    }
-
-                    // send email
-                    agenda.now("send future email");
-                    sendEmailConfirmation(req.params.ride_id, newRide, user, false,true, false);
-                    res.status(200).send(newRide);
-                });
-            }
-        });
-    });
-});
 
 module.exports = router;

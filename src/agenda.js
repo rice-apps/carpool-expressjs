@@ -19,7 +19,19 @@ agenda.define('send future email', (job, done) => {
 });
 
 // eventually migrate EmailConfirmation function to here.
-agenda.define("ride creation email", (job, done) => {
+agenda.define("createdRide email", (job, done) => {
+    // TODO
+
+    done();
+});
+
+agenda.define("joinedRide email", (job, done) => {
+    // TODO
+
+    done();
+});
+
+agenda.define("leftRide email", (job, done) => {
     // TODO
 
     done();
