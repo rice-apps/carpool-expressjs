@@ -255,6 +255,7 @@ router.post('/', (req, res) => {
       arriving_at: req.body.ride.arriving_at,
       departing_from: req.body.ride.departing_from,
       number_riders: req.body.ride.number_riders,
+      comments_input: req.body.ride.comments_input,
       riders: [user._id],
     }, (err, ride) => {
       if (err) return res.status(500).send();
