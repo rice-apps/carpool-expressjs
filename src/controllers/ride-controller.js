@@ -281,9 +281,10 @@ function updateJob(add, email, data, when) {
     } else {
         data.to.filter(sendtoMe => sendtoMe!=email)
     }
-    agenda.cancel({ride_id: 'RIDE ID'}, (err, numRemoved) => {
+
+    agenda.cancel({ "data.ride_id" : 'RIDE ID' }, (err, numRemoved) => {
         if (err) {
-            // console.log("500 error for finding ride: " + err)
+            console.log("500 error for finding ride: " + err);
             res.status(500).send();
         }
         else {
