@@ -20,11 +20,9 @@ router.use(bodyParser.json());
 router.get('/', function (req, res) {
 
   var ticket = req.query.ticket;
-  console.log("HERE", req.query);
 
   if (ticket) {
     // validate our ticket against the CAS server
-      //serviceURL = localhost:4200
     var url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
     request(url, function (err, response, body) {
 
@@ -59,7 +57,6 @@ router.get('/', function (req, res) {
                 email: authSucceded.user + '@rice.edu'
               }, function (err, newUser) {
                 if (err) return res.status(500).send();
-                console.log('new user', newUser);
                 newUserCheck = true;
                 userId = newUser._id;
               });
@@ -67,7 +64,6 @@ router.get('/', function (req, res) {
             } else {
               userId = user._id;
             }
-            console.log("new user id", userId);
 
             // send our token to the frontend! now, whenever the user tries to access a resource, we check their
             // token by verifying it and seeing if the payload (the username) allows this user to access

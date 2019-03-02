@@ -216,8 +216,6 @@ router.get('/user/:user', (req, res) => {
     const query = { riders: { $all: currentuser } };
 
     Ride.find(query, (err, rides) => {
-      console.log('Rides', rides);
-
       if (err) {
         return res.status(500); // db error (500 internal server error)
       }
@@ -285,6 +283,7 @@ router.post('/:ride_id/book', (req, res) => {
       console.log(err);
       return res.status(500).send('Internal Error');
     }
+
     if (!user) {
       console.log(`Could not find user with id ${req.body.user_id}`);
       return res.status(404).send('Could not find user by ID.');
@@ -299,8 +298,6 @@ router.post('/:ride_id/book', (req, res) => {
         console.log(`Could not find ride with id ${req.params.ride_id}`);
         return res.status(404).send('Could not find ride by ID');
       }
-
-      console.log(ride.riders);
       if (includes(ride.riders, user._id)) {
         console.log('User already exists on ride');
         return res.status(403).send('User exists on ride');
@@ -350,8 +347,7 @@ router.delete('/:ride_id/:user_id', (req, res) => {
 
     // Check if the user is part of this ride
     // Remove the user from this ride
-    console.log(req.params.user_id);
-    console.log(ride.riders);
+
     if (ride.riders.some(r => r._id.toString() === req.params.user_id.toString())) {
 
       ride.riders = ride.riders.filter(ele => ele._id.toString() !== req.params.user_id.toString());
