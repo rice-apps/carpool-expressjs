@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const Ride = require('../models/ride');
 const User = require('../models/user');
 const authMiddleWare = require('../middleware/auth-middleware');
+const ObjectId = require('mongodb').ObjectId;
 
 const nodemailer = require('nodemailer');
 
@@ -232,7 +233,7 @@ router.post('/', (req, res) => {
 
             console.log("Ride creation: " + ride);
 
-            var id = ride._id;
+            var id = String(ride._id);
             var ridersStringAry = [user.email];
 
             // 1 day in milliseconds: 86400000
@@ -412,7 +413,6 @@ function deleteJob(ride_id) {
 function updateJob(add, email, ride_id) {
     console.log("Updating job");
 
-    var query = {temp: ride_id};
 
     var time;
 
@@ -420,7 +420,9 @@ function updateJob(add, email, ride_id) {
     async function main() {
 
         console.log("Ride id: %s", ride_id);
-        const jobs = await agenda.jobs({ride_id : query.temp });
+
+        ride_id = String(ride_id);
+        const jobs = await agenda.jobs({ "data.ride_id" : ride_id});
         console.log("Jobs: " + jobs);
 
         if(jobs.length === 0) {
@@ -428,31 +430,19 @@ function updateJob(add, email, ride_id) {
         }
 
         else {
-
-            console.log("Jobs: " + jobs);
             var i;
-            for (i = 0; i < jobs.length; i++) {
-                console.log("job bleh");
-                console.log("JOB %s with users %s at time %s", jobs[i].attrs.data.ride_id, jobs[i].attrs.data.to, jobs[i].attrs.lastRunAt);
-            }
-            var when = jobs[0].attrs.nextRunAt;
+            const when = jobs[0].attrs.nextRunAt;
             if (add) {
                 jobs[0].attrs.data.to.push(email); // formerly .push(user)... mistake @josie ?
             } else {
-                jobs[0].attrs.data.to.filter(sendtoMe => sendtoMe!=email)
+                jobs[0].attrs.data.to = jobs[0].attrs.data.to.filter(sendtoMe => sendtoMe!==email);
             }
 
-            agenda.cancel({ride_id: query.temp }, (err, numRemoved) => {
-                if (err) {
-                    console.log("500 error for finding ride: " + err);
-                    res.status(500).send();
-                }
-                else {
-                    console.log("Number of CANCELLED jobs: " + numRemoved);
-                }
+            agenda.cancel({"data.ride_id" : ride_id}).then(console.log("CANCELLED YO MAMA\n"));
+            console.log("Rescheduling JOB %s with users %s at time %s", ride_id, jobs[0].attrs.data.to, when);
+            agenda.schedule(when, 'send future email', jobs[0].attrs.data).then((job) => {
+                console.log("HI." + job);
             });
-
-            agenda.schedule(when, 'send future email', jobs[0].attrs.data);
         }
     }
 
