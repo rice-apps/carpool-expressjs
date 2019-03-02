@@ -13,32 +13,39 @@ agenda.start();
 // done() --> asynchronous
 agenda.define('send future email', (job, done) => {
     // const {to} = job.attrs.data;
+    console.log('Job \"%s\" created with id %s and email %s at time %s', job.attrs.name, job.attrs.data.ride_id, job.attrs.data.to, job.attrs.lastRunAt);
     console.log('are these the emails? %s', job.attrs.data.to);
     createEmailReminderJob(job.attrs.data);
     done();
 });
 
 // eventually migrate EmailConfirmation function to here.
-agenda.define("createdRide email", (job, done) => {
+agenda.define("created ride email", (job, done) => {
     // TODO
 
     done();
 });
 
-agenda.define("joinedRide email", (job, done) => {
+agenda.define("joined ride email", (job, done) => {
     // TODO
 
     done();
 });
 
-agenda.define("leftRide email", (job, done) => {
+agenda.define("left ride email", (job, done) => {
     // TODO
 
     done();
+});
+
+agenda.define("update job", (job, done) => {
+    // TODO
+
+   done();
 });
 
 agenda.on('start', job => {
-    console.log('Job \"%s\" starting with id %s and email %s', job.attrs.name, job.attrs.data.ride_id, job.attrs.data.to);
+    console.log('Job \"%s\" starting with id %s and email %s at time %s', job.attrs.name, job.attrs.data.ride_id, job.attrs.data.to, job.attrs.lastRunAt);
 });
 agenda.on('complete', job => {
     console.log(`Job ${job.attrs.name} finished`);
@@ -52,7 +59,7 @@ agenda.on('success:send future email', job => {
     console.log(`Sent Email Successfully`);
 });
 agenda.on('fail:send future email', (err, job) => {
-    console.log('Job failed with error: ${err.message}');
+    console.log('Job failed with error: '+ err.message);
 });
 
 /**
@@ -60,6 +67,7 @@ agenda.on('fail:send future email', (err, job) => {
  * @param data: Object containing ride ID and list of riders
  */
 function createEmailReminderJob(data) {
+    console.log("Creating email reminder job?");
     var messageBody = '<p>Your ride is in 24 hours.</p>';
 
     async function main(){

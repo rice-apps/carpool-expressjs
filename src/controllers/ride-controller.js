@@ -236,11 +236,22 @@ router.post('/', (req, res) => {
             var ridersStringAry = [user.email];
 
             // 1 day in milliseconds: 86400000
-            var sendTime = ride.departing_datetime - 86400000;
-            console.log("Ride id: %s and Riders: %s", id, ridersStringAry);
-            agenda.schedule(sendTime, "send future email", {ride_id: id, to: ridersStringAry});
+            // Date object
+            var sendTime = new Date(ride.departing_datetime - 86400000);
+            // get current time
+            const currentTime = Date.now();
 
-            //updateJob(1, "hwangangela99@hotmail.com", {ride_id: "RIDE ID", to: ['alh9@rice.edu']}, "in 1 minute");
+            if (sendTime > currentTime) {
+                console.log("Scheduling job");
+                //agenda.schedule(sendTime, "send future email", {ride_id: id, to: ridersStringAry});
+                agenda.schedule(sendTime, "send future email", {ride_id: id, to: ridersStringAry});
+            } else {
+                console.log("Not sending an email because the ride is in 24 hours.");
+            }
+
+            console.log("Ride id: %s and Riders: %s", id, ridersStringAry);
+            sendEmailConfirmation(req.params.ride_id, ride, user, true,false, false);
+
 
             res.status(200).send(ride);
         });
@@ -292,6 +303,7 @@ router.delete('/:ride_id/:user_id', (req, res) => {
                     }
                     if (!user) res.status(404).send();
 
+                    updateJob(false, user.email, req.params.ride_id);
                     sendEmailConfirmation(req.params.ride_id, ride, user, false, false, true);
                 });
 
@@ -315,6 +327,8 @@ router.delete('/:ride_id/:user_id', (req, res) => {
  */
 function deleteRide(ride_id, callback) {
     const myquery = { _id: ride_id };
+
+    deleteJob(ride_id);
     Ride.deleteOne(myquery, (err, ride) => {
         callback(err, ride);
     });
@@ -353,10 +367,8 @@ router.post('/:ride_id/book', (req, res) => {
             if (includes(ride.riders, user.username)) {
                 res.status(403).send('User exists on ride');
             } else {
-                // console.log("this is what riders look like: "+ride.riders)
-                // console.log("this is what the new rider look like: " + user)
+                console.log("User added to ride.");
                 ride.riders.push(user);
-                // console.log("this is what new riders look like:" + ride.riders)
                 const newRiders = ride.riders;
                 ride.set({ riders: newRiders });
                 ride.save((err, newRide) => {
@@ -366,7 +378,8 @@ router.post('/:ride_id/book', (req, res) => {
                     }
 
                     // send email
-                    sendEmailConfirmation(req.params.ride_id, newRide, user, false,true, false);
+                    sendEmailConfirmation(req.params.ride_id, ride, user, false,true, false);
+                    updateJob(true, user.email, req.params.ride_id);
                     res.status(200).send(newRide);
                 });
             }
@@ -374,22 +387,12 @@ router.post('/:ride_id/book', (req, res) => {
     });
 });
 
-
 /**
- * Updates a the mailing list and timing of a job.
- * @param add: boolean representing whether the email should be added/removed to/from the mailing list
- * @param email: email address string
- * @param data: data object whose "to" field is to be modified
- * @param when: time to schedule the future email
+ * Deletes job.
+ * @param ride_id
  */
-function updateJob(add, email, data, when) {
-    if (add) {
-        data.to.push(email); // formerly .push(user)... mistake @josie ?
-    } else {
-        data.to.filter(sendtoMe => sendtoMe!=email)
-    }
-
-    agenda.cancel({ "data.ride_id" : data.ride_id }, (err, numRemoved) => {
+function deleteJob(ride_id) {
+    agenda.cancel({ "data.ride_id" : ride_id }, (err, numRemoved) => {
         if (err) {
             console.log("500 error for finding ride: " + err);
             res.status(500).send();
@@ -398,8 +401,62 @@ function updateJob(add, email, data, when) {
             console.log("Number of CANCELLED jobs: " + numRemoved);
         }
     });
+}
 
-    agenda.schedule(when, 'send future email', data);
+/**
+ * Updates a the mailing list and timing of a job.
+ * @param add: boolean representing whether the email should be added/removed to/from the mailing list
+ * @param email: email address string
+ * @param ride_id: ride id of the ride
+ */
+function updateJob(add, email, ride_id) {
+    console.log("Updating job");
+
+    var query = {temp: ride_id};
+
+    var time;
+
+    // Find the job matching the ride_id to get the time.
+    async function main() {
+
+        console.log("Ride id: %s", ride_id);
+        const jobs = await agenda.jobs({ride_id : query.temp });
+        console.log("Jobs: " + jobs);
+
+        if(jobs.length === 0) {
+            console.log("There are no jobs that match the query.");
+        }
+
+        else {
+
+            console.log("Jobs: " + jobs);
+            var i;
+            for (i = 0; i < jobs.length; i++) {
+                console.log("job bleh");
+                console.log("JOB %s with users %s at time %s", jobs[i].attrs.data.ride_id, jobs[i].attrs.data.to, jobs[i].attrs.lastRunAt);
+            }
+            var when = jobs[0].attrs.nextRunAt;
+            if (add) {
+                jobs[0].attrs.data.to.push(email); // formerly .push(user)... mistake @josie ?
+            } else {
+                jobs[0].attrs.data.to.filter(sendtoMe => sendtoMe!=email)
+            }
+
+            agenda.cancel({ride_id: query.temp }, (err, numRemoved) => {
+                if (err) {
+                    console.log("500 error for finding ride: " + err);
+                    res.status(500).send();
+                }
+                else {
+                    console.log("Number of CANCELLED jobs: " + numRemoved);
+                }
+            });
+
+            agenda.schedule(when, 'send future email', jobs[0].attrs.data);
+        }
+    }
+
+    main().catch(console.error);
 }
 
 /**
@@ -413,6 +470,8 @@ function updateJob(add, email, data, when) {
  */
 function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, leftRide) {
 
+    console.log("sending Email Confirmation");
+
     var departingFrom = ride.departing_from;
     var arrivingAt = ride.arriving_at;
     var date = ride.departing_datetime;
@@ -425,21 +484,28 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
 
     else newRider = rider.first_name + " " + rider.last_name;
 
-    var i;
-    for (i = 0; i < ride.riders.length; i++) {
-        var temp = ride.riders[i];
+    console.log("New Rider: %s", newRider);
 
-        // if the user is joining a ride, make sure they don't get 2 emails.
-        if (temp.username !== rider.username)
-            emailString += temp.email + ', ';
+    if (createdRide) {
+        riderString = '';
+    } else {
 
-        // Use the full name of the rider for riders list, or the rider's username if not available.
-        if (!temp.first_name)
-            riderString += '<li>' + temp.username + '</li>';
-        else riderString += '<li>' + temp.first_name + ' ' + temp.last_name + '</li>';
+        var i;
+        for (i = 0; i < ride.riders.length; i++) {
+            var temp = ride.riders[i];
+
+            // if the user is joining a ride, make sure they don't get 2 emails.
+            if (temp.username !== rider.username)
+                emailString += temp.email + ', ';
+
+            // Use the full name of the rider for riders list, or the rider's username if not available.
+            if (!temp.first_name)
+                riderString += '<li>' + temp.username + '</li>';
+            else riderString += '<li>' + temp.first_name + ' ' + temp.last_name + '</li>';
+        }
+
+        riderString += '</ul>';
     }
-
-    riderString += '</ul>';
 
 
     // Use the flags to determine which type of message to send.
@@ -455,9 +521,9 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
         '<br/><p> To view the ride page, <a href = ' + link + '>click here</a>.</p>';
 
     if (createdRide) {
-        subject = 'You have created a ride!';
-        message = 'You have created ride ' + ride_id;
-        messageBody = "<p>You will be responsible for calling an Uber/Lyft for this ride to happen. The ride's information is as follows.</p>" + messageBody;
+        personalSubject = 'You have created a ride!';
+        personalMessage = 'You have created ride ' + ride_id;
+        personalMessage = "<p>You will be responsible for calling an Uber/Lyft for this ride to happen.</p>";
     }
 
     if (joinedRide) {
