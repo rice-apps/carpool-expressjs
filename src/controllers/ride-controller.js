@@ -438,11 +438,9 @@ function updateJob(add, email, ride_id) {
                 jobs[0].attrs.data.to = jobs[0].attrs.data.to.filter(sendtoMe => sendtoMe!==email);
             }
 
-            agenda.cancel({"data.ride_id" : ride_id}).then(console.log("CANCELLED YO MAMA\n"));
-            console.log("Rescheduling JOB %s with users %s at time %s", ride_id, jobs[0].attrs.data.to, when);
-            agenda.schedule(when, 'send future email', jobs[0].attrs.data).then((job) => {
-                console.log("HI." + job);
-            });
+            console.log("riders: %s", jobs[0].attrs.data.to);
+            jobs[0].save();
+            console.log("successfully updated")
         }
     }
 
