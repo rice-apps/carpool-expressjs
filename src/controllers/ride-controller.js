@@ -430,10 +430,9 @@ function updateJob(add, email, ride_id) {
         }
 
         else {
-            var i;
-            const when = jobs[0].attrs.nextRunAt;
+
             if (add) {
-                jobs[0].attrs.data.to.push(email); // formerly .push(user)... mistake @josie ?
+                jobs[0].attrs.data.to.push(email);
             } else {
                 jobs[0].attrs.data.to = jobs[0].attrs.data.to.filter(sendtoMe => sendtoMe!==email);
             }
@@ -463,6 +462,8 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
     var departingFrom = ride.departing_from;
     var arrivingAt = ride.arriving_at;
     var date = ride.departing_datetime;
+    var localeDate = date.toLocaleDateString();
+    var localeTime = date.toLocaleTimeString();
     var emailString = '';
     var riderString = '<h4>Riders (' + ride.riders.length + ')</h4><ul>'
     var newRider = '';
@@ -501,31 +502,32 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
     var message;
     var personalSubject;
     var personalMessage;
-    var link = '\"localhost:4200/rides/' + ride_id + '\"';
-    var messageBody = '<p>Departing from: ' + departingFrom + '</p>' +
-        '<p>Arriving at: ' + arrivingAt + '</p>' +
-        '<p>Depature time: ' + date + '</p>' +
+    var link = '\"https://carpool.riceapps.org/rides/' + ride_id + '\"';
+    var messageBody = "<p>The ride's information is now as follows: </p>" +
+        '<p><b>Departing from</b>: ' + departingFrom + '</p>' +
+        '<p><b>Arriving at</b>: ' + arrivingAt + '</p>' +
+        '<p><b>Departure time</b>: ' + localeDate + ' ' + localeTime + '</p>' +
         riderString +
         '<br/><p> To view the ride page, <a href = ' + link + '>click here</a>.</p>';
 
     if (createdRide) {
-        personalSubject = 'You have created a ride!';
-        personalMessage = 'You have created ride ' + ride_id;
+        personalSubject = 'You have created a ride to ' + arrivingAt + ' on ' + localeDate + '!';
+        personalMessage = 'You have created ride <b>' + ride_id + '</b>';
         personalMessage = "<p>You will be responsible for calling an Uber/Lyft for this ride to happen.</p>";
     }
 
     if (joinedRide) {
-        subject = 'User ' + newRider + ' has joined your ride!';
+        subject = 'User ' + newRider + ' has joined your ride to ' + arrivingAt + ' on ' + localeDate + '!';
         message = '<p>User ' + newRider + ' has joined your ride. </p>';
-        personalSubject = 'You have joined ride ' + ride_id + '!';
-        personalMessage = 'Yay! You have joined ride ' + ride_id + '.';
+        personalSubject = 'You have joined a ride to ' + arrivingAt + ' on ' + localeDate + '!';
+        personalMessage = 'Yay! You have joined ride <b>' + ride_id + '</b>.';
     }
 
     if (leftRide) {
         subject = 'User ' + newRider + ' has left your ride!';
         message = '<p>User ' + newRider + ' has left your ride. </p>';
-        personalSubject = 'You have left ride ' + ride_id + '!';
-        personalMessage = "You have left ride " + ride_id + ". The ride's information is as follows: ";
+        personalSubject = 'You have left a ride to ' + arrivingAt + ' on ' + localeDate + '!';
+        personalMessage = "You have left ride <b>" + ride_id + "</b>.";
     }
 
     async function main(){
