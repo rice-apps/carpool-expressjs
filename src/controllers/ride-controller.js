@@ -244,14 +244,13 @@ router.post('/', (req, res) => {
 
             if (sendTime > currentTime) {
                 console.log("Scheduling job");
-                //agenda.schedule(sendTime, "send future email", {ride_id: id, to: ridersStringAry});
                 agenda.schedule(sendTime, "send future email", {ride_id: id, to: ridersStringAry});
             } else {
                 console.log("Not sending an email because the ride is in 24 hours.");
             }
 
             console.log("Ride id: %s and Riders: %s", id, ridersStringAry);
-            sendEmailConfirmation(req.params.ride_id, ride, user, true,false, false);
+            sendEmailConfirmation(id, ride, user, true,false, false);
 
 
             res.status(200).send(ride);
@@ -548,7 +547,7 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
         });
 
         // To all the riders on the ride
-        if (! createdRide)
+        if (!createdRide)
         {
 
             let mailOptions = {

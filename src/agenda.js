@@ -1,47 +1,18 @@
+var express = require('express');
+
 var Agenda = require('agenda');
-const config = require('./config');
-const nodemailer = require('nodemailer');
+var config = require('./config');
+var nodemailer = require('nodemailer');
 
-const mongoConnectionString = config.db_uri;
-// printing out config.db_uri: mongodb://carpool2018:carpool2018@ds149353.mlab.com:49353/carpool_dev
-
-//const mongoConnectionString = mongoose.connect('mongodb://127.0.0.1/Carpool',{ useMongoClient: true });
-const agenda = new Agenda({db: {address: mongoConnectionString, collection: 'jobs'}});
+var mongoConnectionString = config.db_uri;
+var agenda = new Agenda({db: {address: mongoConnectionString, collection: 'jobs'}});
+var Ride = require('./models/ride');
 agenda.start();
 
-// Job data should include: ride id
-// done() --> asynchronous
+
 agenda.define('send future email', (job, done) => {
-    // const {to} = job.attrs.data;
-    console.log('Job \"%s\" created with id %s and email %s at time %s', job.attrs.name, job.attrs.data.ride_id, job.attrs.data.to, job.attrs.lastRunAt);
-    console.log('are these the emails? %s', job.attrs.data.to);
     createEmailReminderJob(job.attrs.data);
     done();
-});
-
-// eventually migrate EmailConfirmation function to here.
-agenda.define("created ride email", (job, done) => {
-    // TODO
-
-    done();
-});
-
-agenda.define("joined ride email", (job, done) => {
-    // TODO
-
-    done();
-});
-
-agenda.define("left ride email", (job, done) => {
-    // TODO
-
-    done();
-});
-
-agenda.define("update job", (job, done) => {
-    // TODO
-
-   done();
 });
 
 agenda.on('start', job => {
@@ -67,45 +38,81 @@ agenda.on('fail:send future email', (err, job) => {
  * @param data: Object containing ride ID and list of riders
  */
 function createEmailReminderJob(data) {
-    console.log("Creating email reminder job?");
-    var messageBody = '<p>Your ride is in 24 hours.</p>';
 
-    async function main(){
 
-        // create reusable transporter object using the default SMTP transport
-        let smtpTransport = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // true for 465, false for other ports
-            auth: {
-                type: 'OAuth2',
-                user: 'carpool.riceapps@gmail.com', // generated ethereal user
-                clientId: '859237922889-smeosvsfknkhm31sirfdt0afnspc4s64.apps.googleusercontent.com',
-                clientSecret: 'aGISyb3daSQF1HFVqKFe5Nho',
-                refreshToken: '1/o1N0caKIPFpdy02pn0qxgwcmpV9KbUyOEL9Jox7RmQQ',
-                accessToken: 'ya29.GludBu475Z82VtLhBWgQNgkIPbVG27l1VrOeFrcrA8Cz1TWuraNc24Q2nAx2GedXezdP0qEJVF2Zw_87hHNsGlra8dJSWjEV9MfOjuOouX4Ly2k1RtENNHaTyU0v'
+    Ride.findById(data.ride_id, (err, ride) => {
+        if (err) console.log(err);
+        if(!ride) console.log("Ride not found.");
+
+        else {
+            var departingFrom = ride.departing_from;
+            var arrivingAt = ride.arriving_at;
+            var date = ride.departing_datetime;
+            var localeDate = date.toLocaleDateString();
+            var localeTime = date.toLocaleTimeString();
+            var riderString = '<h4>Riders (' + ride.riders.length + ')</h4><ul>'
+
+            var i;
+            for (i = 0; i < ride.riders.length; i++) {
+                var temp = ride.riders[i];
+
+                // Use the full name of the rider for riders list, or the rider's username if not available.
+                if (!temp.first_name)
+                    riderString += '<li>' + temp.username + '</li>';
+                else riderString += '<li>' + temp.first_name + ' ' + temp.last_name + '</li>';
             }
-        });
 
-        var emailString = "";
-        for (var i = 0; i < data.to.length; i ++) {
-            emailString += data.to[i] + ", ";
+            riderString += '</ul>';
+
+
+            var link = '\"https://carpool.riceapps.org/rides/' + data.ride_id + '\"';
+            var messageBody = "<p>Your ride to " + arrivingAt + " in 24 hours!</p>" +
+                "<p>The ride's information is as follows: </p>" +
+                '<p><b>Departing from</b>: ' + departingFrom + '</p>' +
+                '<p><b>Arriving at</b>: ' + arrivingAt + '</p>' +
+                '<p><b>Departure time</b>: ' + localeDate + ' ' + localeTime + '</p>' +
+                riderString +
+                '<br/><p> To view the ride page, <a href = ' + link + '>click here</a>.</p>';
+
+            async function main(){
+
+                // create reusable transporter object using the default SMTP transport
+                let smtpTransport = nodemailer.createTransport({
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true, // true for 465, false for other ports
+                    auth: {
+                        type: 'OAuth2',
+                        user: 'carpool.riceapps@gmail.com', // generated ethereal user
+                        clientId: '859237922889-smeosvsfknkhm31sirfdt0afnspc4s64.apps.googleusercontent.com',
+                        clientSecret: 'aGISyb3daSQF1HFVqKFe5Nho',
+                        refreshToken: '1/o1N0caKIPFpdy02pn0qxgwcmpV9KbUyOEL9Jox7RmQQ',
+                        accessToken: 'ya29.GludBu475Z82VtLhBWgQNgkIPbVG27l1VrOeFrcrA8Cz1TWuraNc24Q2nAx2GedXezdP0qEJVF2Zw_87hHNsGlra8dJSWjEV9MfOjuOouX4Ly2k1RtENNHaTyU0v'
+                    }
+                });
+
+                let emailString = "";
+                for (var i = 0; i < data.to.length; i ++) {
+                    emailString += data.to[i] + ", ";
+                }
+                console.log("Email Receivers: %s", emailString);
+
+                let mailOptions = {
+                    from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
+                    to: emailString, // list of receivers
+                    subject: "Your ride to " + arrivingAt + " in 24 hours!", // Subject line
+                    html: messageBody
+                };
+
+                let info = await smtpTransport.sendMail(mailOptions);
+                console.log("Message sent: %s", info.messageId);
+
+            }
+
+            main().catch(console.error);
         }
-        console.log("Email Receivers: %s", emailString);
 
-        let mailOptions = {
-            from: "Rice Carpool <carpool.riceapps@gmail.com>", // sender address
-            to: emailString, // list of receivers
-            subject: "Your ride is in 24 hours!", // Subject line
-            html: messageBody
-        };
-
-        let info = await smtpTransport.sendMail(mailOptions);
-        console.log("Message sent: %s", info.messageId);
-
-    }
-
-    main().catch(console.error);
+    });
 }
 
 module.exports = agenda;
