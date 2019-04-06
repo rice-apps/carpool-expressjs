@@ -53,36 +53,51 @@ router.get('/', function (req, res) {
             }
 
             if (!user) {
+
+              console.log("New user :(");
               User.create({
                 username: authSucceded.user,
                 email: authSucceded.user + '@rice.edu'
               }, function (err, newUser) {
                 if (err) return res.status(500).send();
-                console.log('new user', newUser);
+
                 newUserCheck = true;
-                console.log('new user?',newUserCheck)
                 userId = newUser._id;
+
+                console.log('new user?', userId, " which should be equal to ", newUser._id, "; ", newUserCheck);
+
+                // send our token to the frontend! now, whenever the user tries to access a resource, we check their
+                // token by verifying it and seeing if the payload (the username) allows this user to access
+                // the requested resource.
+                res.json({
+                  success: true,
+                  message: 'CAS authentication success',
+                  isNew: newUserCheck,
+                  user: {
+                    _id: userId,
+                    token: token
+                  }
+                });
+                return res.status(200);
+
               });
-              newUserCheck = true;
+
             } else {
+              console.log("Not a new user!");
               newUserCheck = false;
               userId = user._id;
-            }
-            console.log("new user id", userId);
 
-            // send our token to the frontend! now, whenever the user tries to access a resource, we check their
-            // token by verifying it and seeing if the payload (the username) allows this user to access
-            // the requested resource.
-            res.json({
-              success: true,
-              message: 'CAS authentication success',
-              isNew: newUserCheck,
-              user: {
-                _id: userId,
-                token: token
-              }
-            });
-            return res.status(200);
+              res.json({
+                success: true,
+                message: 'CAS authentication success',
+                isNew: newUserCheck,
+                user: {
+                  _id: userId,
+                  token: token
+                }
+              });
+              return res.status(200);
+            }
           });
 
         } else if (serviceResponse.authenticationFailure) {
