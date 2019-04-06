@@ -510,23 +510,22 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
         '<br/><p> To view the ride page, <a href = ' + link + '>click here</a>.</p>';
 
     if (createdRide) {
-        personalSubject = 'You have created a ride to ' + arrivingAt + ' on ' + localeDate + '!';
-        personalMessage = 'You have created ride <b>' + ride_id + '</b>';
-        personalMessage = "<p>You will be responsible for calling an Uber/Lyft for this ride to happen.</p>";
+        personalSubject = 'You have created a ride to ' + arrivingAt + ' on ' + localeDate;
+        personalMessage = 'You have created a ride from ' + departingFrom + ' to ' + arrivingAt + ' on ' + localeDate + '!';
     }
 
     if (joinedRide) {
         subject = 'User ' + newRider + ' has joined your ride to ' + arrivingAt + ' on ' + localeDate + '!';
         message = '<p>User ' + newRider + ' has joined your ride. </p>';
-        personalSubject = 'You have joined a ride to ' + arrivingAt + ' on ' + localeDate + '!';
-        personalMessage = 'Yay! You have joined ride <b>' + ride_id + '</b>.';
+        personalSubject = 'You have joined a ride to ' + arrivingAt + ' on ' + localeDate;
+        personalMessage = 'You have joined a ride from ' + departingFrom + ' to ' + arrivingAt + ' on ' + localeDate + '!';
     }
 
     if (leftRide) {
         subject = 'User ' + newRider + ' has left your ride!';
         message = '<p>User ' + newRider + ' has left your ride. </p>';
-        personalSubject = 'You have left a ride to ' + arrivingAt + ' on ' + localeDate + '!';
-        personalMessage = "You have left ride <b>" + ride_id + "</b>.";
+        personalSubject = 'You have left a ride to ' + arrivingAt + ' on ' + localeDate;
+        personalMessage = 'You have left a ride from ' + departingFrom + ' to ' + arrivingAt + ' on ' + localeDate + '!';
     }
 
     async function main(){
