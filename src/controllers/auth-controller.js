@@ -46,7 +46,10 @@ router.get('/', function (req, res) {
 
           // see if this netID exists as a user already. if not, create one.
           let newUserCheck = false;
-          User.findOne({username: authSucceded.user.toLowerCase()}, function (err, user) {
+
+          authSucceded.user = authSucceded.user.toLowerCase();
+
+          User.findOne({username: authSucceded.user}, function (err, user) {
           //User.findOne({username: authSucceded.user}, function (err, user) {
             if (err) return res.status(500).send();
             if (!user) {
