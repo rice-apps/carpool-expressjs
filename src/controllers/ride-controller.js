@@ -461,8 +461,15 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
     var departingFrom = ride.departing_from;
     var arrivingAt = ride.arriving_at;
     var date = ride.departing_datetime;
-    var localeDate = date.toLocaleDateString();
-    var localeTime = date.toLocaleTimeString();
+    var localeDate = date.toLocaleDateString([], {
+        timeZone:'America/Chicago'
+    });
+    var localeTime = date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute:'2-digit',
+        timeZone:'America/Chicago',
+        timeZoneName: 'long'
+    });
     var emailString = '';
     var riderString = '<h4>Riders (' + ride.riders.length + ')</h4><ul>'
     var newRider = '';
