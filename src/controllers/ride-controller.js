@@ -294,7 +294,7 @@ router.post('/', (req, res) => {
             }
 
             console.log("Ride id: %s and Riders: %s", id, ridersStringAry);
-            sendEmailConfirmation(id, ride, user, true, false, false);
+            sendEmailConfirmation(id, ride, user, true, false, false, false);
 
 
             res.status(200).send(ride);
@@ -347,13 +347,14 @@ router.post('/:ride_id/book', (req, res) => {
                 const newRiders = ride.riders;
                 ride.set({ riders: newRiders });
                 ride.save((saveErr, newRide) => {
+                    console.log("lul, error is null? " + saveErr);
                     if (saveErr) {
                         console.log(saveErr);
                         return res.status(500).send('Error saving user into ride');
                     }
 
                     // send email
-                    sendEmailConfirmation(req.params.ride_id, ride, user, false, true, false);
+                    sendEmailConfirmation(req.params.ride_id, ride, user, false, true, false, false);
                     updateJob(true, user.email, req.params.ride_id);
                     return res.status(200).send(newRide);
                 });
@@ -401,31 +402,44 @@ router.delete('/:ride_id/:user_id', (req, res) => {
 
             // If this ride has no users - delete it
             if (ride.riders && ride.riders.length === 0) {
-                deleteRide(req.params.ride_id, (err, res) => {
+                deleteRide(req.params.ride_id, (err, response) => {
                     if (err) { return res.status(500).send(); }
-                    console.log('ride ', req.params.ride_id, ' is now empty and successfully deleted');
+
+                    User.findById(req.params.user_id, (err, user) => {
+                        console.log("User: " + user);
+                        console.log("User email: " + user.email);
+                        if (err) {
+                            // console.log("500 error for finding user: " + err)
+                            res.status(500).send();
+                        }
+                        if (!user) res.status(404).send();
+
+                        sendEmailConfirmation(req.params.ride_id, ride, user, false, false, false, true);
+                        console.log('ride ', req.params.ride_id, ' is now empty and successfully deleted');
+                        res.status(200).send(ride);
+                    });
+                });
+            } else {
+                // Write the changes to the database
+                ride.save((saveErr) => {
+                    if (saveErr) return res.status(500).send();
+
+                    User.findById(req.params.user_id, (err, user) => {
+                        console.log("User: " + user);
+                        console.log("User email: " + user.email);
+                        if (err) {
+                            // console.log("500 error for finding user: " + err)
+                            res.status(500).send();
+                        }
+                        if (!user) res.status(404).send();
+
+                        updateJob(false, user.email, req.params.ride_id);
+                        sendEmailConfirmation(req.params.ride_id, ride, user, false, false, true, false);
+                    });
+
+                    return res.status(200).send(ride);
                 });
             }
-
-            // Write the changes to the database
-            ride.save((saveErr) => {
-                if (saveErr) return res.status(500).send();
-
-                // Email
-                User.findOne({ username: req.params.user_id }, (err, user) => {
-                    if (err) {
-                        // console.log("500 error for finding user: " + err)
-                        res.status(500).send();
-                    }
-                    if (!user) res.status(404).send();
-
-                    updateJob(false, user.email, req.params.ride_id);
-                    sendEmailConfirmation(req.params.ride_id, ride, user, false, false, true);
-                });
-
-
-                return res.status(200).send(ride);
-            });
         } else {
             console.log('User does not exist on this ride!');
             return res.status(404).send('User does not exist on ride!');
@@ -452,8 +466,8 @@ function deleteRide(ride_id, callback) {
     const myquery = { _id: ride_id };
 
     deleteJob(ride_id);
-    Ride.deleteOne(myquery, (err, ride) => {
-        callback(err, ride);
+    Ride.deleteOne(myquery, (err, res) => {
+        callback(err, res);
     });
 }
 
@@ -524,7 +538,7 @@ function updateJob(add, email, ride_id) {
  * @param joinedRide: Boolean, true if the triggering action was someone joining a ride
  * @param leftRide: Boolean, true if the triggering action was someone leaving a ride
  */
-function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, leftRide) {
+function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, leftRide, deletedRide) {
 
     console.log("sending Email Confirmation");
 
@@ -583,8 +597,9 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
         '<p><b>Departing from</b>: ' + departingFrom + '</p>' +
         '<p><b>Arriving at</b>: ' + arrivingAt + '</p>' +
         '<p><b>Departure time</b>: ' + localeDate + ' ' + localeTime + '</p>' +
-        riderString +
-        '<br/><p> To view the ride page, <a href = ' + link + '>click here</a>.</p>';
+        riderString;
+    if (!deletedRide)
+        messageBody += '<br/><p> To view the ride page, <a href = ' + link + '>click here</a>.</p>';
 
     if (createdRide) {
         personalSubject = 'You have created a ride to ' + arrivingAt + ' on ' + localeDate;
@@ -605,6 +620,16 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
         personalMessage = 'You have left a ride from ' + departingFrom + ' to ' + arrivingAt + ' on ' + localeDate + '!';
     }
 
+    if (deletedRide) {
+        personalSubject = 'You have left a ride to ' + arrivingAt + ' on ' + localeDate;
+        personalMessage = 'You have left a ride from ' + departingFrom + ' to ' + arrivingAt + ' on ' + localeDate + '! ' +
+        'Because you were the only person previously in this ride, the ride has been deleted.';
+        messageBody = "<p>The ride's information was previously as such: </p>" +
+            '<p><b>Departing from</b>: ' + departingFrom + '</p>' +
+            '<p><b>Arriving at</b>: ' + arrivingAt + '</p>' +
+            '<p><b>Departure time</b>: ' + localeDate + ' ' + localeTime + '</p>';
+    }
+
     async function main(){
 
         // create reusable transporter object using the default SMTP transport
@@ -623,7 +648,7 @@ function sendEmailConfirmation(ride_id, ride, rider, createdRide, joinedRide, le
         });
 
         // To all the riders on the ride
-        if (!createdRide)
+        if (!createdRide && !deletedRide)
         {
 
             let mailOptions = {
