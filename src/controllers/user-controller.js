@@ -24,7 +24,8 @@ router.get('/:user_id', (req, res) => {
     console.log('Invalid user_id format');
     return res.status(404).send('Invalid user_id format');
   }
-
+  console.log("Finding based off of " + req.params.user_id);
+  console.log("Params: " + req.params);
   User.findById(req.params.user_id, (err, user) => {
     if (err) {
       console.log(err);
@@ -34,6 +35,7 @@ router.get('/:user_id', (req, res) => {
       console.log(`Could not find user with id ${req.params.user_id}`);
       return res.status(404).send('Could not find user by ID.');
     }
+    console.log("User found");
     return res.status(200).send(user);
   });
 });
