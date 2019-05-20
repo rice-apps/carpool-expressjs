@@ -34,14 +34,14 @@ router.get('/', function (req, res) {
             // prefix off of tags and another to prevent the parser from creating 1-element arrays.
             xmlParser(body, {tagNameProcessors: [stripPrefix], explicitArray: false}, function (err, result) {
 
-				if (err) return res.status(500);
+            	if (err)return res.status(500);
 
                 serviceResponse = result.serviceResponse;
 
                 var authSucceded = serviceResponse.authenticationSuccess;
-
+                console.log('authSucceded:', authSucceded);
                 if (authSucceded) {
-
+                	console.log('auth succeeded!');
                     // here, we create a token with the user's info as its payload.
                     // authSucceded contains: { user: <username>, attributes: <attributes>}
                     var token = jwt.sign({data: authSucceded}, config.secret);
@@ -59,6 +59,7 @@ router.get('/', function (req, res) {
                             console.log(err);
                             return res.status(500).send('Internal Error');
                         }
+                        console.log('user:',user);
 
                         if (!user) {
                             // Create a new user
@@ -85,7 +86,7 @@ router.get('/', function (req, res) {
                                         token: token
                                     }
                                 });
-
+                                console.log('is New!', res.isNew);
                                 return res.status(200);
 
                             });
@@ -104,7 +105,7 @@ router.get('/', function (req, res) {
                                     token: token
                                 }
                             });
-                            
+                            console.log('NOT new', res.isNew);
                             return res.status(200);
                         }
                     });
