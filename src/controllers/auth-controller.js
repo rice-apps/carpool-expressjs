@@ -23,7 +23,7 @@ router.get('/', function (req, res) {
 
     if (ticket) {
         // validate our ticket against the CAS server
-        //serviceURL = localhost:4200
+        // serviceURL = localhost:4200
         var url = `${config.CASValidateURL}?ticket=${ticket}&service=${config.thisServiceURL}`;
         request(url, function (err, response, body) {
 
@@ -33,18 +33,22 @@ router.get('/', function (req, res) {
             // notice the second argument - it's an object of options for the parser, one to strip the namespace
             // prefix off of tags and another to prevent the parser from creating 1-element arrays.
             xmlParser(body, {tagNameProcessors: [stripPrefix], explicitArray: false}, function (err, result) {
-                if (err) return res.status(500);
+
+				if (err) return res.status(500);
 
                 serviceResponse = result.serviceResponse;
 
                 var authSucceded = serviceResponse.authenticationSuccess;
+
                 if (authSucceded) {
+
                     // here, we create a token with the user's info as its payload.
                     // authSucceded contains: { user: <username>, attributes: <attributes>}
                     var token = jwt.sign({data: authSucceded}, config.secret);
 
 					var newUserCheck = null;
 
+					//Change entered NETID to lowercase to avoid duplicate accounts for same netid
 					authSucceded.user = authSucceded.user.toLowerCase();
 
 					// see if this netID exists as a user already. if not, create one.
@@ -81,6 +85,7 @@ router.get('/', function (req, res) {
                                         token: token
                                     }
                                 });
+
                                 return res.status(200);
 
                             });
@@ -99,6 +104,7 @@ router.get('/', function (req, res) {
                                     token: token
                                 }
                             });
+                            
                             return res.status(200);
                         }
                     });
