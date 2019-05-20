@@ -311,36 +311,6 @@ router.post('/:ride_id/book', (req, res) => {
         console.log('Invalid user_id format');
         return res.status(404).send('Invalid user_id format');
     }
-
-<<<<<<< HEAD
-    if (!user) {
-      console.log(`Could not find user with id ${req.body.user_id}`);
-      return res.status(404).send('Could not find user by ID.');
-    }
-
-    Ride.findById(req.params.ride_id, (rideErr, ride) => {
-      if (rideErr) {
-        console.log(rideErr);
-        return res.status(500).send('Internal Error');
-      }
-      if (!ride) {
-        console.log(`Could not find ride with id ${req.params.ride_id}`);
-        return res.status(404).send('Could not find ride by ID');
-      }
-      if (includes(ride.riders, user._id)) {
-        console.log('User already exists on ride');
-        return res.status(403).send('User exists on ride');
-      } else {
-        ride.riders.push(user);
-        const newRiders = ride.riders;
-        ride.set({ riders: newRiders });
-        ride.save((saveErr, newRide) => {
-          if (saveErr) {
-            console.log(saveErr);
-            return res.status(500).send('Error saving user into ride');
-          }
-          return res.status(200).send(newRide);
-=======
     if (!req.body.user_id) {
         console.log('A user id was not provided');
         return res.status(404).send('A user must be provided.');
@@ -387,7 +357,6 @@ router.post('/:ride_id/book', (req, res) => {
                     return res.status(200).send(newRide);
                 });
             }
->>>>>>> 3753e813834ee2433ff6775bb3ba9e4262611097
         });
     });
 });
@@ -401,42 +370,6 @@ router.delete('/:ride_id/:user_id', (req, res) => {
         return res.status(404).send('Invalid user_id format');
     }
 
-<<<<<<< HEAD
-    // If this ride is already empty - delete it. It should not be in this kind of state.
-    if (ride.riders && !ride.riders.length) {
-      deleteRide(req.params.ride_id, (err, res) => {
-        if (err) { return res.status(500).send(); }
-        console.log('ride ', req.params.ride_id, ' was already empty and successfully deleted');
-      });
-    }
-
-    // Check if the user is part of this ride
-    // Remove the user from this ride
-
-    if (ride.riders.some(r => r._id.toString() === req.params.user_id.toString())) {
-
-      ride.riders = ride.riders.filter(ele => ele._id.toString() !== req.params.user_id.toString());
-      console.log('removed user id ', req.params.user_id, 'from ride', req.params.ride_id);
-
-      // If this ride has no users - delete it
-      if (ride.riders && ride.riders.length === 0) {
-        deleteRide(req.params.ride_id, (err, res) => {
-          if (err) { return res.status(500).send(); }
-          console.log('ride ', req.params.ride_id, ' is now empty and successfully deleted');
-        });
-      }
-
-      // Write the changes to the database
-      ride.save((saveErr) => {
-        if (saveErr) return res.status(500).send();
-        return res.status(200).send(ride);
-      });
-    } else {
-      console.log('User does not exist on this ride!');
-      return res.status(404).send('User does not exist on ride!');
-    }
-  });
-=======
     // Get the ride
     Ride.findById(req.params.ride_id, (err, ride) => {
         if (err) {
@@ -510,7 +443,6 @@ router.delete('/:ride_id/:user_id', (req, res) => {
             return res.status(404).send('User does not exist on ride!');
         }
     });
->>>>>>> 3753e813834ee2433ff6775bb3ba9e4262611097
 });
 
 /**
